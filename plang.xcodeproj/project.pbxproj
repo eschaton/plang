@@ -3,20 +3,114 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 100;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9FBEF7582FB3D82300BACE77 /* libplang.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FBEF7492FB3D80800BACE77 /* libplang.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9FBEF7592FB3D82300BACE77 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9FBEF7412FB3D80800BACE77 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9FBEF7482FB3D80800BACE77;
+			remoteInfo = plang;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9F7192902FC554C3005491E1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = /usr/local/libexec/plang;
+			dstSubfolder = None;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		9F0552AD2FDA2CC000C46327 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
+		9F0552AE2FDA2CC000C46327 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
+		9F0552AF2FDA2CC000C46327 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		9FBEF7492FB3D80800BACE77 /* libplang.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libplang.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "plang Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9F71928F2FC554B3005491E1 /* Exceptions for "plang" folder in "plang" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				plang.pas,
+			);
+			target = 9FBEF7482FB3D80800BACE77 /* plang */;
+		};
+		9FE70D4F2FBD5E11005F17E3 /* Exceptions for "plang Tests" folder in "plang Tests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Base64.pas,
+				PreambleUnit.pas,
+				TrivialProgram.pas,
+				TrivialUnit.pas,
+			);
+			target = 9FBEF7532FB3D82200BACE77 /* plang Tests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		9F7192922FC554DF005491E1 /* Exceptions for "plang" folder in "Copy Files" phase from "plang" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 9F7192902FC554C3005491E1 /* CopyFiles */;
+			membershipExceptions = (
+				plang.pas,
+			);
+		};
+		9FE70D502FBD5E11005F17E3 /* Exceptions for "plang Tests" folder in "Copy Bundle Resources" phase from "plang Tests" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 9FBEF7522FB3D82200BACE77 /* Resources */;
+			membershipExceptions = (
+				Base64.pas,
+				PreambleUnit.pas,
+				TrivialProgram.pas,
+				TrivialUnit.pas,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		9FBEF7552FB3D82200BACE77 /* plang Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9FE70D4F2FBD5E11005F17E3 /* Exceptions for "plang Tests" folder in "plang Tests" target */,
+				9FE70D502FBD5E11005F17E3 /* Exceptions for "plang Tests" folder in "Copy Bundle Resources" phase from "plang Tests" target */,
+			);
+			path = "plang Tests";
+			sourceTree = "<group>";
+		};
+		9FBEF7652FB3E06600BACE77 /* plang */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9F71928F2FC554B3005491E1 /* Exceptions for "plang" folder in "plang" target */,
+				9F7192922FC554DF005491E1 /* Exceptions for "plang" folder in "Copy Files" phase from "plang" target */,
+			);
+			path = plang;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		9FBEF7472FB3D80800BACE77 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9FBEF7512FB3D82200BACE77 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				9FBEF7582FB3D82300BACE77 /* libplang.dylib in Frameworks */,
+			);
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -24,6 +118,11 @@
 		9FBEF7402FB3D80800BACE77 = {
 			isa = PBXGroup;
 			children = (
+				9F0552AF2FDA2CC000C46327 /* README.md */,
+				9F0552AE2FDA2CC000C46327 /* COPYING */,
+				9F0552AD2FDA2CC000C46327 /* CONTRIBUTING.md */,
+				9FBEF7652FB3E06600BACE77 /* plang */,
+				9FBEF7552FB3D82200BACE77 /* plang Tests */,
 				9FBEF74A2FB3D80800BACE77 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -32,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				9FBEF7492FB3D80800BACE77 /* libplang.dylib */,
+				9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -41,10 +141,8 @@
 /* Begin PBXHeadersBuildPhase section */
 		9FBEF7452FB3D80800BACE77 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
@@ -56,17 +154,38 @@
 				9FBEF7452FB3D80800BACE77 /* Headers */,
 				9FBEF7462FB3D80800BACE77 /* Sources */,
 				9FBEF7472FB3D80800BACE77 /* Frameworks */,
+				9F7192902FC554C3005491E1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				9FBEF7652FB3E06600BACE77 /* plang */,
+			);
+			name = plang;
+			productName = plang;
+			productReference = 9FBEF7492FB3D80800BACE77 /* libplang.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		9FBEF7532FB3D82200BACE77 /* plang Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9FBEF75B2FB3D82300BACE77 /* Build configuration list for PBXNativeTarget "plang Tests" */;
+			buildPhases = (
+				9FBEF7502FB3D82200BACE77 /* Sources */,
+				9FBEF7512FB3D82200BACE77 /* Frameworks */,
+				9FBEF7522FB3D82200BACE77 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9FBEF75A2FB3D82300BACE77 /* PBXTargetDependency */,
 			);
-			name = plang;
-			packageProductDependencies = (
+			fileSystemSynchronizedGroups = (
+				9FBEF7552FB3D82200BACE77 /* plang Tests */,
 			);
-			productName = plang;
-			productReference = 9FBEF7492FB3D80800BACE77 /* libplang.dylib */;
-			productType = "com.apple.product-type.library.dynamic";
+			name = "plang Tests";
+			productName = "plang Tests";
+			productReference = 9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -75,9 +194,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 2640;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					9FBEF7482FB3D80800BACE77 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+					9FBEF7532FB3D82200BACE77 = {
 						CreatedOnToolsVersion = 26.4.1;
 					};
 				};
@@ -91,28 +213,48 @@
 			);
 			mainGroup = 9FBEF7402FB3D80800BACE77;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 100;
 			productRefGroup = 9FBEF74A2FB3D80800BACE77 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				9FBEF7482FB3D80800BACE77 /* plang */,
+				9FBEF7532FB3D82200BACE77 /* plang Tests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		9FBEF7522FB3D82200BACE77 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		9FBEF7462FB3D80800BACE77 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9FBEF7502FB3D82200BACE77 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		9FBEF75A2FB3D82300BACE77 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9FBEF7482FB3D80800BACE77 /* plang */;
+			targetProxy = 9FBEF7592FB3D82300BACE77 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		9FBEF74B2FB3D80800BACE77 /* Debug */ = {
+		9FBEF74B2FB3D80800BACE77 /* Debug configuration for PBXProject "plang" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -146,6 +288,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = V4FN2V327V;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -174,7 +317,7 @@
 			};
 			name = Debug;
 		};
-		9FBEF74C2FB3D80800BACE77 /* Release */ = {
+		9FBEF74C2FB3D80800BACE77 /* Release configuration for PBXProject "plang" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -208,6 +351,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = V4FN2V327V;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -215,6 +359,10 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"NDEBUG=1",
+					"$(inherited)",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -229,10 +377,11 @@
 			};
 			name = Release;
 		};
-		9FBEF74E2FB3D80800BACE77 /* Debug */ = {
+		9FBEF74E2FB3D80800BACE77 /* Debug configuration for PBXNativeTarget "plang" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V4FN2V327V;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -242,10 +391,11 @@
 			};
 			name = Debug;
 		};
-		9FBEF74F2FB3D80800BACE77 /* Release */ = {
+		9FBEF74F2FB3D80800BACE77 /* Release configuration for PBXNativeTarget "plang" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V4FN2V327V;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -255,25 +405,63 @@
 			};
 			name = Release;
 		};
+		9FBEF75C2FB3D82300BACE77 /* Debug configuration for PBXNativeTarget "plang Tests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = V4FN2V327V;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "ventures.basehit.plang-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Debug;
+		};
+		9FBEF75D2FB3D82300BACE77 /* Release configuration for PBXNativeTarget "plang Tests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = V4FN2V327V;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "ventures.basehit.plang-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
 		9FBEF7442FB3D80800BACE77 /* Build configuration list for PBXProject "plang" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9FBEF74B2FB3D80800BACE77 /* Debug */,
-				9FBEF74C2FB3D80800BACE77 /* Release */,
+				9FBEF74B2FB3D80800BACE77 /* Debug configuration for PBXProject "plang" */,
+				9FBEF74C2FB3D80800BACE77 /* Release configuration for PBXProject "plang" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		9FBEF74D2FB3D80800BACE77 /* Build configuration list for PBXNativeTarget "plang" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9FBEF74E2FB3D80800BACE77 /* Debug */,
-				9FBEF74F2FB3D80800BACE77 /* Release */,
+				9FBEF74E2FB3D80800BACE77 /* Debug configuration for PBXNativeTarget "plang" */,
+				9FBEF74F2FB3D80800BACE77 /* Release configuration for PBXNativeTarget "plang" */,
 			);
-			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9FBEF75B2FB3D82300BACE77 /* Build configuration list for PBXNativeTarget "plang Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9FBEF75C2FB3D82300BACE77 /* Debug configuration for PBXNativeTarget "plang Tests" */,
+				9FBEF75D2FB3D82300BACE77 /* Release configuration for PBXNativeTarget "plang Tests" */,
+			);
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
