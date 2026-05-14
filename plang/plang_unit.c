@@ -1,0 +1,64 @@
+/*
+    plang_unit.c
+    plang
+
+    Copyright © 2026 Christopher M. Hanson. All rights reserved.
+    See the file COPYING for license details.
+*/
+
+#include "plang_unit_internal.h"
+
+#include <stdlib.h>
+
+PLANG_SOURCE_BEGIN
+
+
+plang_unit_t PLANG_NULLABLE
+plang_unit_new(plang_parser_t parser,
+               plang_token_t identifier,
+               plang_node_t node)
+{
+    struct plang_unit *unit = NULL;
+
+    unit = calloc(sizeof(struct plang_unit), 1);
+    if (unit == NULL) return NULL;
+
+    unit->_parser = parser;
+    unit->_identifier = identifier;
+    unit->_node = node;
+
+    return unit;
+}
+
+
+void
+plang_unit_free(plang_unit_t PLANG_NULLABLE unit)
+{
+    if (unit == NULL) return;
+
+    free(unit);
+}
+
+
+plang_parser_t
+plang_unit_get_parser(plang_unit_t unit)
+{
+    return unit->_parser;
+}
+
+
+plang_token_t
+plang_unit_get_identifier(plang_unit_t unit)
+{
+    return unit->_identifier;
+}
+
+
+plang_node_t
+plang_unit_get_node(plang_unit_t unit)
+{
+    return unit->_node;
+}
+
+
+PLANG_SOURCE_END
