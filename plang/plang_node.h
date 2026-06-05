@@ -16,6 +16,7 @@ PLANG_HEADER_BEGIN
 
 /* Forward Declarations */
 
+typedef struct plang_array *plang_array_t;
 typedef struct plang_parser *plang_parser_t;
 typedef struct plang_scope *plang_scope_t;
 typedef struct plang_token *plang_token_t;
@@ -150,6 +151,16 @@ enum plang_node_type_e {
     plang_node_type_interface_part,
     plang_node_type_implementation_part,
     plang_node_type_subroutine_part,
+
+#if PLANG_CLASCAL
+    /* Clascal */
+
+    plang_node_type_forward_class_type,
+    plang_node_type_class_type,
+    plang_node_type_method_interface,
+    plang_node_type_method_block,
+    plang_node_type_creation_block,
+#endif
 };
 typedef enum plang_node_type_e plang_node_type_t;
 
@@ -270,6 +281,13 @@ plang_scope_t
 plang_node_unit_get_implementation_scope(plang_node_t node);
 
 
+#if PLANG_CLASCAL
+/*! Get the method block nodes for a unit node. */
+plang_array_t PLANG_NULLABLE
+plang_node_unit_copy_method_blocks(plang_node_t node);
+#endif
+
+
 /*!
  Get the scope for a procedure node.
 
@@ -284,10 +302,33 @@ plang_node_procedure_get_scope(plang_node_t node);
  Get the scope for a function node.
 
  - NOTE: This is polymorphic and will work for both function
-         declarations and procedure headings.
+         declarations and function headings.
  */
 plang_scope_t
 plang_node_function_get_scope(plang_node_t node);
+
+
+#if PLANG_CLASCAL
+/*! Get the scope for a _class-type_ node. */
+plang_scope_t _Nonnull
+plang_node_class_type_get_scope(plang_node_t _Nonnull node);
+
+/*! Get the scope for a _method-block_ node. */
+plang_scope_t _Nonnull
+plang_node_method_block_get_scope(plang_node_t _Nonnull node);
+
+/*! Get the _class-type-identifier_ for a _method-block_ node.*/
+plang_node_t
+plang_node_method_block_get_class_type_identifier(plang_node_t node);
+
+/*! Get the _creation-block_ node for a _method-block_ node. */
+plang_node_t PLANG_NULLABLE
+plang_node_method_block_get_creation_block(plang_node_t node);
+
+/*! Get the scope for a _creation-block_ node. */
+plang_scope_t _Nonnull
+plang_node_creation_block_get_scope(plang_node_t _Nonnull node);
+#endif
 
 
 PLANG_HEADER_END

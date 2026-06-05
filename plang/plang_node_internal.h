@@ -473,7 +473,8 @@ PLANG_NODE_FREE_PROTOTYPE(variable_declaration);
 struct plang_node_variable_reference {
     struct plang_node _header;
 
-    plang_node_t _variable_identifier;
+    plang_node_t PLANG_NULLABLE _variable_identifier;
+    plang_node_t PLANG_NULLABLE _function_call;
     plang_array_t PLANG_NULLABLE _qualifiers;
 };
 
@@ -875,6 +876,10 @@ PLANG_NODE_FREE_PROTOTYPE(function_identifier);
 struct plang_node_procedure_reference {
     struct plang_node _header;
 
+#if PLANG_CLASCAL
+    plang_node_t PLANG_NULLABLE _variable_reference;
+    plang_node_t PLANG_NULLABLE _class_type_identifier;
+#endif
     plang_node_t _procedure_identifier;
 };
 
@@ -884,6 +889,10 @@ PLANG_NODE_FREE_PROTOTYPE(procedure_reference);
 struct plang_node_function_reference {
     struct plang_node _header;
 
+#if PLANG_CLASCAL
+    plang_node_t PLANG_NULLABLE _variable_reference;
+    plang_node_t PLANG_NULLABLE _class_type_identifier;
+#endif
     plang_node_t _function_identifier;
 };
 
@@ -907,6 +916,9 @@ struct plang_node_procedure_heading {
 
     plang_scope_t _scope;
 
+#if PLANG_CLASCAL
+    plang_node_t PLANG_NULLABLE _class_type_identifier;
+#endif
     plang_token_t _identifier;
     plang_node_t PLANG_NULLABLE _formal_parameter_list;
 };
@@ -944,6 +956,9 @@ struct plang_node_function_heading {
 
     plang_scope_t _scope;
 
+#if PLANG_CLASCAL
+    plang_node_t PLANG_NULLABLE _class_type_identifier;
+#endif
     plang_token_t _identifier;
     plang_node_t PLANG_NULLABLE _formal_parameter_list;
     plang_node_t _result_type;
@@ -958,6 +973,9 @@ struct plang_node_result_type {
     plang_node_t PLANG_NULLABLE _ordinal_type_identifier;
     plang_node_t PLANG_NULLABLE _real_type_identifier;
     plang_node_t PLANG_NULLABLE _pointer_type_identifier;
+#if PLANG_CLASCAL
+    plang_node_t PLANG_NULLABLE _class_type_identifier;
+#endif
 };
 
 PLANG_NODE_PARSE_PROTOTYPE(result_type);
@@ -1099,6 +1117,73 @@ struct plang_node_subroutine_part {
 
 PLANG_NODE_PARSE_PROTOTYPE(subroutine_part);
 PLANG_NODE_FREE_PROTOTYPE(subroutine_part);
+
+
+#if PLANG_CLASCAL
+/* MARK: - Clascal */
+
+PLANG_NODE_PARSE_PROTOTYPE(class_type_identifier);
+/* No free, this is a meta-node. */
+
+struct plang_node_forward_class_type {
+    struct plang_node _header;
+
+    /* Presence alone indicates type. */
+};
+
+PLANG_NODE_PARSE_PROTOTYPE(forward_class_type);
+PLANG_NODE_FREE_PROTOTYPE(forward_class_type);
+
+struct plang_node_class_type {
+    struct plang_node _header;
+    plang_node_t _declaration;        /*!< backwards link */
+
+    plang_node_t PLANG_NULLABLE _superclass_type_identifier;
+    plang_node_t PLANG_NULLABLE _field_list;
+    plang_array_t PLANG_NULLABLE _method_interfaces;
+
+    plang_scope_t _scope;
+};
+
+PLANG_NODE_PARSE_PROTOTYPE(class_type);
+PLANG_NODE_FREE_PROTOTYPE(class_type);
+
+struct plang_node_method_interface {
+    struct plang_node _header;
+
+    plang_node_t _heading;
+    bool _is_abstract;
+    bool _is_default;
+    bool _is_override;
+};
+
+PLANG_NODE_PARSE_PROTOTYPE(method_interface);
+PLANG_NODE_FREE_PROTOTYPE(method_interface);
+
+struct plang_node_method_block {
+    struct plang_node _header;
+
+    plang_node_t _class_type_identifier;
+    plang_node_t PLANG_NULLABLE _procedure_and_function_declaration_part;
+    plang_node_t PLANG_NULLABLE _creation_block;
+
+    plang_scope_t _scope;
+};
+
+PLANG_NODE_PARSE_PROTOTYPE(method_block);
+PLANG_NODE_FREE_PROTOTYPE(method_block);
+
+struct plang_node_creation_block {
+    struct plang_node _header;
+
+    plang_node_t _block;
+
+    plang_scope_t _scope;
+};
+
+PLANG_NODE_PARSE_PROTOTYPE(creation_block);
+PLANG_NODE_FREE_PROTOTYPE(creation_block);
+#endif
 
 
 PLANG_HEADER_END

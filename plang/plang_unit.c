@@ -78,4 +78,13 @@ plang_unit_get_implementation_scope(plang_unit_t unit)
 }
 
 
+#if PLANG_CLASCAL
+plang_array_t PLANG_NULLABLE
+plang_unit_copy_method_blocks(plang_unit_t unit)
+{
+    return plang_node_unit_copy_method_blocks(unit->_node);
+}
+#endif
+
+
 PLANG_SOURCE_END

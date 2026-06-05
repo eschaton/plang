@@ -159,6 +159,15 @@ plang_node_new(plang_node_type_t type)
         case PLANG_NODE_SIZE(implementation_part);
         case PLANG_NODE_SIZE(subroutine_part);
 
+#ifdef PLANG_CLASCAL
+            /* Clascal */
+        case PLANG_NODE_SIZE(forward_class_type);
+        case PLANG_NODE_SIZE(class_type);
+        case PLANG_NODE_SIZE(method_interface);
+        case PLANG_NODE_SIZE(method_block);
+        case PLANG_NODE_SIZE(creation_block);
+#endif
+
 #undef PLANG_NODE_SIZE
     }
 
@@ -318,6 +327,15 @@ plang_node_free(plang_node_t PLANG_NULLABLE node)
         case PLANG_NODE_FREE(interface_part);
         case PLANG_NODE_FREE(implementation_part);
         case PLANG_NODE_FREE(subroutine_part);
+
+#ifdef PLANG_CLASCAL
+            /* Clascal */
+        case PLANG_NODE_FREE(forward_class_type);
+        case PLANG_NODE_FREE(class_type);
+        case PLANG_NODE_FREE(method_interface);
+        case PLANG_NODE_FREE(method_block);
+        case PLANG_NODE_FREE(creation_block);
+#endif
 
 #undef PLANG_NODE_FREE
     }
@@ -1349,6 +1367,13 @@ plang_node_type_set_type_declaration(plang_node_t type_node,
             ns->_declaration = declaration_node;
         } break;
 
+#if PLANG_CLASCAL
+        case plang_node_type_class_type: {
+            struct plang_node_class_type *ns = (void *)type_node;
+            ns->_declaration = declaration_node;
+        }
+#endif
+
 
             /* Type Declarations */
 
@@ -1410,6 +1435,13 @@ plang_node_type_get_type_declaration(plang_node_t type_node)
             struct plang_node_record_type *ns = (void *)type_node;
             return ns->_declaration;
         }
+
+#if PLANG_CLASCAL
+        case plang_node_type_class_type: {
+            struct plang_node_class_type *ns = (void *)type_node;
+            return ns->_declaration;
+        }
+#endif
 
 
             /* Type Identifiers */
@@ -2028,6 +2060,14 @@ plang_node_structured_type_parse(plang_parser_t parser)
         plang_parser_signal_error(parser, error);
         goto bail_out;
     }
+
+#if PLANG_CLASCAL
+    node = plang_node_forward_class_type_parse(parser);
+    if (node) return node;
+
+    node = plang_node_class_type_parse(parser);
+    if (node) return node;
+#endif
 
 done:
     return node;
@@ -2923,21 +2963,47 @@ plang_node_variable_reference_get_type(plang_node_t node,
 
     struct plang_node_variable_reference *ns = (void *)node;
 
-    /*
-     For a variable reference via a variable identifier, look up the
-     variable in the given scope to find its declaration node. Then
-     resolve the variable declaration node's type to a concrete type
-     and return its node.
-     */
-    struct plang_node_variable_identifier *vis
-        = (void *) ns->_variable_identifier;
-    plang_token_t identifier = vis->_identifier;
-    plang_variable_t variable
-        = plang_scope_variable_lookup(scope, identifier, true);
-    plang_type_t variable_type
-        = plang_variable_get_type(variable, scope);
-    type_node
-        = plang_type_get_concrete_type_node(variable_type, scope);
+    if (ns->_variable_identifier) {
+        /*
+         For a variable reference via a variable identifier, look up the
+         variable in the given scope to find its declaration node. Then
+         resolve the variable declaration node's type to a concrete type
+         and return its node.
+         */
+        struct plang_node_variable_identifier *vis
+            = (void *) ns->_variable_identifier;
+        plang_token_t identifier = vis->_identifier;
+        plang_variable_t variable
+            = plang_scope_variable_lookup(scope, identifier, true);
+        plang_type_t variable_type
+            = plang_variable_get_type(variable, scope);
+        type_node
+            = plang_type_get_concrete_type_node(variable_type, scope);
+    } else if (ns->_function_call) {
+        /*
+         For a variable reference via a function call, look up the
+         function in the given scope to find its declaration node. Then
+         use the function declaration node to find the result-type,
+         resolve that to a concrete type, and return its node.
+         */
+        struct plang_node_function_call *fcs
+            = (void *) ns->_function_call;
+        struct plang_node_function_reference *frs
+            = (void *) fcs->_function_reference;
+        struct plang_node_function_identifier *fis
+            = (void *) frs->_function_identifier;
+        plang_function_t function
+            = plang_scope_function_lookup(scope, fis->_identifier, true);
+        struct plang_node_function_declaration *fds
+            = (void *) plang_function_get_node(function);
+        struct plang_node_function_heading *fhs
+            = (void *) fds->_function_heading;
+        plang_node_t result_type = (void *) fhs->_result_type;
+        type_node = plang_node_result_type_get_type(result_type);
+    } else {
+        /* Shouldn't be possible to get here. */
+        assert(false);
+    }
 
     return type_node;
 }
@@ -2966,8 +3032,26 @@ plang_node_variable_identifier_parse(plang_parser_t parser)
                                                             identifier,
                                                             true);
     if (variable == NULL) {
+#if PLANG_CLASCAL
+        /*
+         SELF, SELFCLASS, and INHERITED are special variables:
+         - SELF represents the instance executing a method
+         - SELFCLASS represents the class of the instance executing a
+           method (of type CLASSREF)
+         - INHERITED represents the instance executing the method, but
+           treated as if it were an instance of its superclass
+         */
+        if (!plang_token_identifier_equals(identifier, "SELF") &&
+            !plang_token_identifier_equals(identifier, "SELFCLASS") &&
+            !plang_token_identifier_equals(identifier, "INHERITED"))
+        {
+            plang_parser_return_token(parser, identifier);
+            goto bail_out;
+        }
+#else
         plang_parser_return_token(parser, identifier);
         goto bail_out;
+#endif
     }
 
     node = PLANG_NODE_NEW(variable_identifier);
@@ -4860,6 +4944,8 @@ plang_node_record_variable_reference_typecheck(plang_parser_t parser,
 
     /*
      Look up the variable's type and ensure the type is a record type.
+
+     For Clascal, the type can be either a record or class type.
      */
 
     plang_node_t variable_node = plang_variable_get_node(variable);
@@ -4873,7 +4959,12 @@ plang_node_record_variable_reference_typecheck(plang_parser_t parser,
     plang_type_t type
         = plang_scope_type_lookup(scope, variable_type_identifier, true);
 
+#if PLANG_CLASCAL
+    return (plang_type_is_record(type, scope) ||
+            plang_type_is_class(type, scope));
+#else
     return plang_type_is_record(type, scope);
+#endif
 }
 
 plang_node_t PLANG_NULLABLE
@@ -5085,21 +5176,139 @@ plang_node_procedure_reference_parse(plang_parser_t parser)
 {
     struct plang_node_procedure_reference *node = NULL;
 
+#if PLANG_CLASCAL
+    bool pushed_class_scope = false;
+    plang_node_t variable_reference = NULL;
+    plang_node_t class_type_identifier = NULL;
+
+    const size_t procedure_reference_start
+        = plang_parser_get_position(parser);
+
+    variable_reference = plang_node_variable_reference_parse(parser);
+    if (variable_reference == NULL) {
+        class_type_identifier
+            = plang_node_class_type_identifier_parse(parser);
+    }
+
+    if ((variable_reference != NULL) ||
+        (class_type_identifier != NULL))
+    {
+        plang_token_t period
+            = plang_parser_next_significant_token(parser);
+        if (!plang_token_matches(period, plang_token_type_PERIOD)) {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_PERIOD,
+                                  plang_token_get_source(period),
+                                  plang_token_get_range(period));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+
+        /*
+         A procedure identifier must be resolved in the scope introduced
+         by the class of the referenced variable or the referenced class
+         itself.
+         */
+
+        plang_scope_t current_scope
+            = plang_parser_scope_current(parser);
+        plang_scope_t class_scope = NULL;
+        if (variable_reference) {
+            plang_node_t class_type_node
+                = plang_node_variable_reference_get_type(variable_reference,
+                                                         current_scope);
+            plang_node_t class_node
+                = plang_node_type_declaration_get_type(class_type_node);
+            if (class_node->_type == plang_node_type_class_type) {
+                class_scope
+                    = plang_node_class_type_get_scope(class_node);
+            } else {
+                /*
+                 The variable reference must be to a class instance, so
+                 signal an error at its start.
+                 */
+                plang_error_t error
+                    = plang_error_new(plang_error_type_expected_class_instance,
+                                      plang_parser_get_source(parser),
+                                      plang_range(procedure_reference_start, 0));
+                plang_parser_signal_error(parser, error);
+                goto bail_out;
+            }
+        } else if (class_type_identifier) {
+            plang_token_t class_identifier
+                = plang_node_type_identifier_get_identifier(class_type_identifier);
+            plang_type_t class_type
+                = plang_scope_type_lookup(current_scope,
+                                          class_identifier,
+                                          true);
+            /*
+             This can't be NULL because class_type_identifier resolved.
+             */
+            assert(class_type != NULL);
+            plang_node_t class_type_node
+                = plang_type_get_node(class_type);
+            plang_node_t class_node
+                = plang_node_type_declaration_get_type(class_type_node);
+            class_scope
+                = plang_node_class_type_get_scope(class_node);
+        } else {
+            /* Should never get here. */
+            assert(false);
+        }
+
+        pushed_class_scope = plang_parser_scope_push(parser,
+                                                     class_scope);
+    }
+
+    const size_t procedure_identifier_start
+        = plang_parser_get_position(parser);
+    plang_node_t procedure_identifier
+        = plang_node_procedure_identifier_parse(parser);
+    if (procedure_identifier == NULL) {
+        if ((variable_reference == NULL) &&
+            (class_type_identifier == NULL))
+        {
+            /* Not what we're looking for, bail out to backtrack. */
+            goto bail_out;
+        } else {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_procedure_call,
+                                  plang_parser_get_source(parser),
+                                  plang_range(procedure_identifier_start, 0));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+    }
+#else
     plang_node_t procedure_identifier
         = plang_node_procedure_identifier_parse(parser);
     if (procedure_identifier == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
         goto bail_out;
     }
+#endif
 
     node = PLANG_NODE_NEW(procedure_reference);
     assert(node != NULL);
 
+#if PLANG_CLASCAL
+    /*
+     The scope of any referenced class should only be at the top of the
+     scope stack while resolving the procedure identifier.
+     */
+    if (pushed_class_scope) (void) plang_parser_scope_pop(parser);
+
+    node->_variable_reference = variable_reference;
+    node->_class_type_identifier = class_type_identifier;
+#endif
     node->_procedure_identifier = procedure_identifier;
 
     return (plang_node_t) node;
 
 bail_out:
+#if PLANG_CLASCAL
+    if (pushed_class_scope) (void) plang_parser_scope_pop(parser);
+#endif
     plang_node_free((plang_node_t) node);
     return NULL;
 }
@@ -5107,6 +5316,10 @@ bail_out:
 void
 plang_node_procedure_reference_free(struct plang_node_procedure_reference *ns)
 {
+#if PLANG_CLASCAL
+    plang_node_free(ns->_variable_reference);
+    plang_node_free(ns->_class_type_identifier);
+#endif
     plang_node_free(ns->_procedure_identifier);
 }
 
@@ -5115,21 +5328,139 @@ plang_node_function_reference_parse(plang_parser_t parser)
 {
     struct plang_node_function_reference *node = NULL;
 
+#if PLANG_CLASCAL
+    plang_node_t variable_reference = NULL;
+    plang_node_t class_type_identifier = NULL;
+    bool pushed_class_scope = false;
+
+    const size_t function_reference_start
+        = plang_parser_get_position(parser);
+
+    variable_reference = plang_node_variable_reference_parse(parser);
+    if (variable_reference == NULL) {
+        class_type_identifier
+            = plang_node_class_type_identifier_parse(parser);
+    }
+
+    if ((variable_reference != NULL) ||
+        (class_type_identifier != NULL))
+    {
+        plang_token_t period
+            = plang_parser_next_significant_token(parser);
+        if (!plang_token_matches(period, plang_token_type_PERIOD)) {
+            plang_error_t error
+            = plang_error_new(plang_error_type_expected_PERIOD,
+                              plang_token_get_source(period),
+                              plang_token_get_range(period));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+
+        /*
+         A function identifier must be resolved in the scope introduced
+         by the class of the referenced variable or the referenced class
+         itself.
+         */
+
+        plang_scope_t current_scope
+            = plang_parser_scope_current(parser);
+        plang_scope_t class_scope = NULL;
+        if (variable_reference) {
+            plang_node_t class_type_node
+                = plang_node_variable_reference_get_type(variable_reference,
+                                                         current_scope);
+            plang_node_t class_node
+                = plang_node_type_declaration_get_type(class_type_node);
+            if (class_node->_type == plang_node_type_class_type) {
+                class_scope
+                    = plang_node_class_type_get_scope(class_node);
+            } else {
+                /*
+                 The variable reference must be to a class instance, so
+                 signal an error at its start.
+                 */
+                plang_error_t error
+                    = plang_error_new(plang_error_type_expected_class_instance,
+                                      plang_parser_get_source(parser),
+                                      plang_range(function_reference_start, 0));
+                plang_parser_signal_error(parser, error);
+                goto bail_out;
+            }
+        } else if (class_type_identifier) {
+            plang_token_t class_identifier
+                = plang_node_type_identifier_get_identifier(class_type_identifier);
+            plang_type_t class_type
+                = plang_scope_type_lookup(current_scope,
+                                          class_identifier,
+                                          true);
+            /*
+             This can't be NULL because class_type_identifier resolved.
+             */
+            assert(class_type != NULL);
+            plang_node_t class_type_node
+                = plang_type_get_node(class_type);
+            plang_node_t class_node
+                = plang_node_type_declaration_get_type(class_type_node);
+            class_scope
+                = plang_node_class_type_get_scope(class_node);
+        } else {
+            /* Should never get here. */
+            assert(false);
+        }
+
+        pushed_class_scope = plang_parser_scope_push(parser,
+                                                     class_scope);
+    }
+
+    const size_t function_identifier_start
+        = plang_parser_get_position(parser);
+    plang_node_t function_identifier
+        = plang_node_function_identifier_parse(parser);
+    if (function_identifier == NULL) {
+        if ((variable_reference == NULL) &&
+            (class_type_identifier == NULL))
+        {
+            /* Not what we're looking for, bail out to backtrack. */
+            goto bail_out;
+        } else {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_function_call,
+                                  plang_parser_get_source(parser),
+                                  plang_range(function_identifier_start, 0));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+    }
+#else
     plang_node_t function_identifier
         = plang_node_function_identifier_parse(parser);
     if (function_identifier == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
         goto bail_out;
     }
+#endif
 
     node = PLANG_NODE_NEW(function_reference);
     assert(node != NULL);
 
+#if PLANG_CLASCAL
+    /*
+     The scope of any referenced class should only be at the top of the
+     scope stack while resolving the function identifier.
+     */
+    if (pushed_class_scope) (void) plang_parser_scope_pop(parser);
+
+    node->_variable_reference = variable_reference;
+    node->_class_type_identifier = class_type_identifier;
+#endif
     node->_function_identifier = function_identifier;
 
     return (plang_node_t) node;
 
 bail_out:
+#if PLANG_CLASCAL
+    if (pushed_class_scope) (void) plang_parser_scope_pop(parser);
+#endif
     plang_node_free((plang_node_t) node);
     return NULL;
 }
@@ -5137,6 +5468,10 @@ bail_out:
 void
 plang_node_function_reference_free(struct plang_node_function_reference *ns)
 {
+#if PLANG_CLASCAL
+    plang_node_free(ns->_variable_reference);
+    plang_node_free(ns->_class_type_identifier);
+#endif
     plang_node_free(ns->_function_identifier);
 }
 
@@ -5239,6 +5574,24 @@ plang_node_procedure_heading_parse(plang_parser_t parser)
     node = PLANG_NODE_NEW(procedure_heading);
     assert(node != NULL);
 
+#if PLANG_CLASCAL
+    plang_node_t class_type_identifier
+        = plang_node_class_type_identifier_parse(parser);
+    if (class_type_identifier != NULL) {
+        plang_token_t period
+            = plang_parser_next_significant_token(parser);
+        if (!plang_token_matches(period, plang_token_type_PERIOD)) {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_PERIOD,
+                                  plang_parser_get_source(parser),
+                                  plang_token_get_range(period));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+    }
+    node->_class_type_identifier = class_type_identifier;
+#endif
+
     plang_token_t identifier = plang_parser_next_significant_token(parser);
     if (!plang_token_matches(identifier, plang_token_type_identifier)) {
         plang_error_t error
@@ -5309,6 +5662,9 @@ plang_node_procedure_heading_free(struct plang_node_procedure_heading *ns)
 {
     plang_scope_free(ns->_scope);
 
+#if PLANG_CLASCAL
+    plang_node_free(ns->_class_type_identifier);
+#endif
     plang_node_free(ns->_formal_parameter_list);
 }
 
@@ -5528,6 +5884,24 @@ plang_node_function_heading_parse(plang_parser_t parser)
     node = PLANG_NODE_NEW(function_heading);
     assert(node != NULL);
 
+#if PLANG_CLASCAL
+    plang_node_t class_type_identifier
+        = plang_node_class_type_identifier_parse(parser);
+    if (class_type_identifier != NULL) {
+        plang_token_t period
+            = plang_parser_next_significant_token(parser);
+        if (!plang_token_matches(period, plang_token_type_PERIOD)) {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_PERIOD,
+                                  plang_parser_get_source(parser),
+                                  plang_token_get_range(period));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+    }
+    node->_class_type_identifier = class_type_identifier;
+#endif
+
     plang_token_t identifier = plang_parser_next_significant_token(parser);
     if (!plang_token_matches(identifier, plang_token_type_identifier)) {
         plang_error_t error
@@ -5621,6 +5995,9 @@ plang_node_function_heading_free(struct plang_node_function_heading *ns)
 {
     plang_scope_free(ns->_scope);
 
+#if PLANG_CLASCAL
+    plang_node_free(ns->_class_type_identifier);
+#endif
     plang_node_free(ns->_formal_parameter_list);
     plang_node_free(ns->_result_type);
 }
@@ -5656,6 +6033,13 @@ plang_node_result_type_parse(plang_parser_t parser)
             = plang_node_pointer_type_identifier_parse(parser);
         node->_pointer_type_identifier = type_identifier;
     }
+#if PLANG_CLASCAL
+    if (type_identifier == NULL) {
+        type_identifier
+            = plang_node_class_type_identifier_parse(parser);
+        node->_class_type_identifier = type_identifier;
+    }
+#endif
 
     if (type_identifier == NULL) {
         plang_error_t error
@@ -5694,6 +6078,10 @@ plang_node_result_type_get_type(plang_node_t node)
         return ns->_real_type_identifier;
     if (ns->_pointer_type_identifier)
         return ns->_pointer_type_identifier;
+#if PLANG_CLASCAL
+    if (ns->_class_type_identifier)
+        return ns->_class_type_identifier;
+#endif
 
     assert(false);
 }
@@ -6361,6 +6749,49 @@ plang_node_unit_get_implementation_scope(plang_node_t node)
     return u->_implementation_scope;
 }
 
+#if PLANG_CLASCAL
+plang_array_t PLANG_NULLABLE
+plang_node_unit_copy_method_blocks(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_unit);
+
+    /*
+     Dig through the unit's implementation-part to its subroutines,
+     which is where the procedure and function declarations are recorded
+     alongside the method blocks, and return a new collection of just
+     the method blocks.
+     */
+
+    struct plang_node_unit *ns = (void *) node;
+    struct plang_node_implementation_part *ips
+        = (void *) ns->_implementation_part;
+    struct plang_node_subroutine_part *ss
+        = (void *) ips->_subroutine_part;
+
+    const size_t count = ((ss != NULL)
+                          ? plang_array_get_count(ss->_declarations)
+                          : 0);
+    plang_array_t mbs;
+    if (count > 0) {
+        mbs = plang_array_new(count);
+        assert(mbs != NULL);
+
+        for (size_t i = 0; i < count; i++) {
+            plang_node_t mb
+                = plang_array_get_item(ss->_declarations, i);
+            if (mb->_type == plang_node_type_method_block) {
+                bool appended = plang_array_append(mbs, mb);
+                assert(appended != false);
+            }
+        }
+    } else {
+        mbs = NULL;
+    }
+
+    return mbs;
+}
+#endif
+
 plang_node_t PLANG_NULLABLE
 plang_node_unit_heading_parse(plang_parser_t parser)
 {
@@ -6509,6 +6940,12 @@ plang_node_subroutine_part_parse(plang_parser_t parser)
                                                                 true);
         }
 
+#if PLANG_CLASCAL
+        if (declaration == NULL) {
+            declaration = plang_node_method_block_parse(parser);
+        }
+#endif
+
         if (declaration == NULL) {
             if (first_time) {
                 /* Not what we're looking for, bail out to backtrack. */
@@ -6537,6 +6974,586 @@ plang_node_subroutine_part_free(struct plang_node_subroutine_part *ns)
 {
     plang_node_array_free(ns->_declarations);
 }
+
+
+#if PLANG_CLASCAL
+/* MARK: - Clascal */
+
+plang_node_t _Nullable
+plang_node_class_type_identifier_parse(plang_parser_t parser)
+{
+    struct plang_node_type_identifier *node = NULL;
+
+    plang_token_t identifier = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(identifier, plang_token_type_identifier)) {
+        /* Not what we're looking for, bail out to backtrack. */
+        if (identifier) plang_parser_return_token(parser, identifier);
+        goto bail_out;
+    }
+
+    /* Check whether the identifier references a known class type. */
+
+    plang_scope_t scope = plang_parser_scope_current(parser);
+    plang_type_t type
+        = plang_scope_type_lookup(scope, identifier, true);
+    if (!plang_type_is_class(type, scope)) {
+        plang_parser_return_token(parser, identifier);
+        goto bail_out;
+    }
+
+    /*
+     The identifier refers to a class type, so create a node for it and
+     save a reference to the declaration node from the type into it.
+     */
+
+    node = PLANG_NODE_NEW(type_identifier);
+    assert(node != NULL);
+
+    node->_identifier = identifier;
+    node->_declaration = plang_type_get_node(type);
+
+    return (plang_node_t) node;
+
+bail_out:
+    plang_node_free((plang_node_t) node);
+    return NULL;
+}
+
+plang_node_t _Nullable
+plang_node_forward_class_type_parse(plang_parser_t parser)
+{
+    struct plang_node_forward_class_type *node = NULL;
+
+    plang_token_t token = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(token, plang_token_type_CLASS)) {
+        /* Not what we're looking for, bail out to backtrack. */
+        plang_parser_return_token(parser, token);
+        goto bail_out;
+    }
+
+    node = PLANG_NODE_NEW(forward_class_type);
+    assert(node != NULL);
+
+    /*
+     There's nothing in this node; its presence in a type declaration is
+     used to indicate that it's actually a forward type declaration for
+     another class, so as to support mutually-recursive declarations.
+     */
+
+    return (plang_node_t) node;
+
+bail_out:
+    plang_node_free((plang_node_t) node);
+    return NULL;
+}
+
+void
+plang_node_forward_class_type_free(struct plang_node_forward_class_type *ns)
+{
+    /* No sub-nodes. */
+}
+
+plang_node_t _Nullable
+plang_node_class_type_parse(plang_parser_t parser)
+{
+    struct plang_node_class_type *node = NULL;
+    bool pushed_scope = false;
+
+    plang_token_t subclass_token
+        = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(subclass_token,
+                             plang_token_type_SUBCLASS))
+    {
+        /* Not what we're looking for, bail out to backtrack. */
+        plang_parser_return_token(parser, subclass_token);
+        goto bail_out;
+    }
+
+    plang_token_t of = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(of, plang_token_type_OF)) {
+        plang_error_t error
+        = plang_error_new(plang_error_type_expected_OF,
+                          plang_token_get_source(of),
+                          plang_token_get_range(of));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    node = PLANG_NODE_NEW(class_type);
+    assert(node != NULL);
+
+    /*
+     A class needs its own scope, for the procedure and function methods
+     that it declares.
+     */
+
+    plang_scope_t current_scope = plang_parser_scope_current(parser);
+    plang_scope_t scope = plang_scope_new(current_scope);
+    assert(scope != NULL);
+
+    pushed_scope = plang_parser_scope_push(parser, scope);
+    assert(pushed_scope != false);
+
+    node->_scope = scope;
+
+    plang_token_t superclass_nil_token
+        = plang_parser_next_significant_token(parser);
+    if (plang_token_matches(superclass_nil_token,
+                             plang_token_type_NIL))
+    {
+        /* Root class (no superclass). */
+        node->_superclass_type_identifier = NULL;
+    } else {
+        plang_parser_return_token(parser, superclass_nil_token);
+
+        const size_t superclass_type_identifier_start
+        = plang_parser_get_position(parser);
+        plang_node_t superclass_type_identifier
+        = plang_node_class_type_identifier_parse(parser);
+        if (superclass_type_identifier == NULL) {
+            plang_error_t error
+            = plang_error_new(plang_error_type_expected_class_identifier,
+                              plang_parser_get_source(parser),
+                              plang_range(superclass_type_identifier_start, 0));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+        node->_superclass_type_identifier = superclass_type_identifier;
+    }
+
+    plang_node_t field_list = plang_node_field_list_parse(parser);
+    /* Optional */
+    node->_field_list = field_list;
+
+    plang_array_t method_interfaces = plang_array_new(4);
+    assert(method_interfaces != NULL);
+    node->_method_interfaces = method_interfaces;
+
+    bool done = false;
+    do {
+        /*
+         The syntax diagram appears to require at least one instance of
+         a method-interface, but that's not actually correct; it's valid
+         to have a class with no method-interface instances, just as
+         it's valid to have a class with no field-list. An instance of
+         such a class may still be created with the NEW() procedure and
+         freed with the FREE() procedure.
+         */
+
+        plang_node_t method_interface
+            = plang_node_method_interface_parse(parser);
+        if (method_interface == NULL) {
+            /* Terminate iteration. */
+            done = true;
+        } else {
+            bool appended = plang_array_append(method_interfaces,
+                                               method_interface);
+            assert(appended != false);
+        }
+    } while (!done);
+
+    plang_token_t end_token
+        = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(end_token, plang_token_type_END)) {
+        plang_error_t error
+            = plang_error_new(plang_error_type_expected_END,
+                              plang_token_get_source(end_token),
+                              plang_token_get_range(end_token));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    /* A class's scope does not extend outside the class definition. */
+
+    (void) plang_parser_scope_pop(parser);
+
+    return (plang_node_t) node;
+
+bail_out:
+    if (pushed_scope) (void) plang_parser_scope_pop(parser);
+    plang_node_free((plang_node_t) node);
+    return NULL;
+}
+
+void
+plang_node_class_type_free(struct plang_node_class_type *ns)
+{
+    plang_scope_free(ns->_scope);
+
+    plang_node_free(ns->_superclass_type_identifier);
+    plang_node_free(ns->_field_list);
+    plang_node_array_free(ns->_method_interfaces);
+}
+
+plang_scope_t
+plang_node_class_type_get_scope(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_class_type);
+
+    struct plang_node_class_type *ns = (void *)node;
+
+    return ns->_scope;
+}
+
+plang_node_t _Nullable
+plang_node_method_interface_parse(plang_parser_t parser)
+{
+    struct plang_node_method_interface *node = NULL;
+
+    plang_node_t heading = plang_node_procedure_heading_parse(parser);
+    if (heading == NULL) {
+        heading = plang_node_function_heading_parse(parser);
+    }
+
+    if (heading == NULL) {
+        /* Not what we're looking for, bail out to backtrack. */
+        goto bail_out;
+    }
+
+    /* Pop the scope introduced by the heading. */
+
+    (void) plang_parser_scope_pop(parser);
+
+    node = PLANG_NODE_NEW(method_interface);
+    assert(node != NULL);
+
+    node->_heading = heading;
+
+    plang_token_t semicolon1
+        = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(semicolon1, plang_token_type_SEMICOLON)) {
+        plang_error_t error
+            = plang_error_new(plang_error_type_expected_SEMICOLON,
+                              plang_parser_get_source(parser),
+                              plang_token_get_range(semicolon1));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    /* See if there's an applicable directive. */
+
+    bool is_abstract = false;
+    bool is_default = false;
+    bool is_override = false;
+    plang_token_t maybe_directive
+        = plang_parser_next_significant_token(parser);
+    if (plang_token_matches(maybe_directive,
+                            plang_token_type_identifier))
+    {
+        is_abstract  = plang_token_identifier_equals(maybe_directive,
+                                                    "ABSTRACT");
+        is_default = plang_token_identifier_equals(maybe_directive,
+                                                    "DEFAULT");
+        is_override = plang_token_identifier_equals(maybe_directive,
+                                                    "OVERRIDE");
+
+        if (!is_abstract && !is_default && !is_override) {
+            plang_parser_return_token(parser, maybe_directive);
+        } else {
+            node->_is_abstract = is_abstract;
+            node->_is_default = is_default;
+            node->_is_override = is_override;
+
+            plang_token_t semicolon2
+                = plang_parser_next_significant_token(parser);
+            if (!plang_token_matches(semicolon2,
+                                     plang_token_type_SEMICOLON)) {
+                plang_error_t error
+                    = plang_error_new(plang_error_type_expected_SEMICOLON,
+                                      plang_parser_get_source(parser),
+                                      plang_token_get_range(semicolon2));
+                plang_parser_signal_error(parser, error);
+                goto bail_out;
+            }
+        }
+    } else {
+        plang_parser_return_token(parser, maybe_directive);
+    }
+
+    return (plang_node_t) node;
+
+bail_out:
+    plang_node_free((plang_node_t) node);
+    return NULL;
+}
+
+void
+plang_node_method_interface_free(struct plang_node_method_interface *ns)
+{
+    plang_node_free(ns->_heading);
+}
+
+/*!
+ Parse a method-block
+
+ Syntax:
+
+     'METHODS' 'OF' class-identifier ';'
+       [procedure-and-function-declaration-part]
+       ['BEGIN' creation-block] 'END'
+
+ */
+plang_node_t _Nullable
+plang_node_method_block_parse(plang_parser_t parser)
+{
+    struct plang_node_method_block *node = NULL;
+    bool pushed_class_scope = false;
+    bool pushed_scope = false;
+
+    plang_token_t methods = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(methods, plang_token_type_METHODS)) {
+        /* Not what we're looking for, bail out to backtrack. */
+        plang_parser_return_token(parser, methods);
+        goto bail_out;
+    }
+
+    plang_token_t of = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(of, plang_token_type_OF)) {
+        plang_error_t error
+            = plang_error_new(plang_error_type_expected_OF,
+                              plang_token_get_source(of),
+                              plang_token_get_range(of));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    const size_t class_type_identifier_start
+        = plang_parser_get_position(parser);
+    plang_node_t class_type_identifier
+        = plang_node_class_type_identifier_parse(parser);
+    if (class_type_identifier == NULL) {
+        plang_error_t error
+            = plang_error_new(plang_error_type_expected_class_identifier,
+                              plang_parser_get_source(parser),
+                              plang_range(class_type_identifier_start, 0));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    /*
+     When defining the methods of a class (and any other constants,
+     types, variables, procedures, and functions that they use), this
+     must be done with the scope of the class available. So look it up
+     and push it.
+     */
+
+    plang_scope_t current_scope = plang_parser_scope_current(parser);
+    plang_token_t class_identifier
+        = plang_node_type_identifier_get_identifier(class_type_identifier);
+    plang_type_t class_type = plang_scope_type_lookup(current_scope,
+                                                      class_identifier,
+                                                      true);
+    /* This can't be NULL because class_type_identifier resolved. */
+    assert(class_type != NULL);
+    plang_node_t class_type_node = plang_type_get_node(class_type);
+    plang_node_t class_node
+        = plang_node_type_declaration_get_type(class_type_node);
+    plang_scope_t class_scope
+        = plang_node_class_type_get_scope(class_node);
+    pushed_class_scope = plang_parser_scope_push(parser, class_scope);
+
+    node = PLANG_NODE_NEW(method_block);
+    assert(node != NULL);
+
+    node->_class_type_identifier = class_type_identifier;
+
+    /*
+     A method block needs its own scope, for any constants, types,
+     variables, procedures, and functions it introduces.
+     */
+
+    plang_scope_t scope = plang_scope_new(current_scope);
+    assert(scope != NULL);
+
+    pushed_scope = plang_parser_scope_push(parser, scope);
+    assert(pushed_scope != false);
+
+    node->_scope = scope;
+
+    plang_token_t semicolon1
+        = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(semicolon1, plang_token_type_SEMICOLON)) {
+        plang_error_t error
+            = plang_error_new(plang_error_type_expected_SEMICOLON,
+                              plang_token_get_source(semicolon1),
+                              plang_token_get_range(semicolon1));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    node->_procedure_and_function_declaration_part
+        = plang_node_procedure_and_function_declaration_part_parse(parser,
+                                                                   true);
+    /* Optional */
+
+    plang_token_t begin_end
+        = plang_parser_next_significant_token(parser);
+    if (plang_token_matches(begin_end, plang_token_type_BEGIN)) {
+        /* BEGIN indicates a creation block is coming. */
+        const size_t creation_block_start
+            = plang_parser_get_position(parser);
+        plang_node_t creation_block
+            = plang_node_creation_block_parse(parser);
+        if (creation_block == NULL) {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_creation_block,
+                                  plang_parser_get_source(parser),
+                                  plang_range(creation_block_start, 0));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+        node->_creation_block = creation_block;
+
+        plang_token_t end = plang_parser_next_significant_token(parser);
+        if (!plang_token_matches(end, plang_token_type_END)) {
+            plang_error_t error
+                = plang_error_new(plang_error_type_expected_END,
+                                  plang_token_get_source(end),
+                                  plang_token_get_range(end));
+            plang_parser_signal_error(parser, error);
+            goto bail_out;
+        }
+    } else if (plang_token_matches(begin_end, plang_token_type_END)) {
+        /* END indicates no creation block is used. */
+    } else {
+        /* Anything else is an error. */
+        plang_error_t error
+            = plang_error_new(plang_error_type_unexpected_token,
+                              plang_token_get_source(begin_end),
+                              plang_token_get_range(begin_end));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    plang_token_t semicolon2
+        = plang_parser_next_significant_token(parser);
+    if (!plang_token_matches(semicolon2, plang_token_type_SEMICOLON)) {
+        plang_error_t error
+            = plang_error_new(plang_error_type_expected_SEMICOLON,
+                              plang_token_get_source(semicolon2),
+                              plang_token_get_range(semicolon2));
+        plang_parser_signal_error(parser, error);
+        goto bail_out;
+    }
+
+    /*
+     The method block's scope does not extend outside the method block.
+     Also pop the class's scope.
+     */
+
+    (void) plang_parser_scope_pop(parser);
+    (void) plang_parser_scope_pop(parser);
+
+    return (plang_node_t) node;
+
+bail_out:
+    if (pushed_scope) (void) plang_parser_scope_pop(parser);
+    if (pushed_class_scope) (void) plang_parser_scope_pop(parser);
+    plang_node_free((plang_node_t) node);
+    return NULL;
+}
+
+void
+plang_node_method_block_free(struct plang_node_method_block *ns)
+{
+    plang_scope_free(ns->_scope);
+
+    plang_node_free(ns->_class_type_identifier);
+    plang_node_free(ns->_procedure_and_function_declaration_part);
+    plang_node_free(ns->_creation_block);
+}
+
+plang_scope_t
+plang_node_method_block_get_scope(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_method_block);
+
+    struct plang_node_method_block *ns = (void *)node;
+
+    return ns->_scope;
+}
+
+plang_node_t
+plang_node_method_block_get_class_type_identifier(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_method_block);
+
+    struct plang_node_method_block *ns = (void *)node;
+
+    return ns->_class_type_identifier;
+}
+
+plang_node_t PLANG_NULLABLE
+plang_node_method_block_get_creation_block(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_method_block);
+
+    struct plang_node_method_block *ns = (void *)node;
+
+    return ns->_creation_block;
+}
+
+plang_node_t _Nullable
+plang_node_creation_block_parse(plang_parser_t parser)
+{
+    struct plang_node_creation_block *node = NULL;
+    bool pushed_scope = false;
+
+    /*
+     A creation block needs its own scope, for any constants, types,
+     variables, procedures, and functions it introduces.
+     */
+
+    plang_scope_t current_scope = plang_parser_scope_current(parser);
+    plang_scope_t scope = plang_scope_new(current_scope);
+    assert(scope != NULL);
+
+    pushed_scope = plang_parser_scope_push(parser, scope);
+    assert(pushed_scope != false);
+
+    plang_node_t block = plang_node_block_parse(parser);
+    if (block == NULL) {
+        /* Not what we're looking for, bail out to backtrack. */
+        goto bail_out;
+    }
+
+    node = PLANG_NODE_NEW(creation_block);
+    assert(node != NULL);
+
+    node->_block = block;
+    node->_scope = scope;
+
+    /* The creation-block's scope is only for itself, not external. */
+
+    (void) plang_parser_scope_pop(parser);
+
+    return (plang_node_t) node;
+
+bail_out:
+    if (pushed_scope) (void) plang_parser_scope_pop(parser);
+    plang_node_free((plang_node_t) node);
+    return NULL;
+}
+
+void
+plang_node_creation_block_free(struct plang_node_creation_block *ns)
+{
+    plang_scope_free(ns->_scope);
+
+    plang_node_free(ns->_block);
+}
+
+plang_scope_t
+plang_node_creation_block_get_scope(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_creation_block);
+
+    struct plang_node_creation_block *ns = (void *)node;
+
+    return ns->_scope;
+}
+
+#endif
 
 
 PLANG_SOURCE_END

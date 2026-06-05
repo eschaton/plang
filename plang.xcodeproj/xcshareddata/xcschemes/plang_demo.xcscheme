@@ -62,6 +62,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "&quot;plang Tests/Base64.pas&quot;"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "&quot;plang Tests/TrivialClascal.pas&quot;"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

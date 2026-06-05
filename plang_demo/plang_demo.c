@@ -22,7 +22,8 @@ void
 plang_constant_decribe(plang_constant_t constant);
 
 void
-plang_type_describe(plang_type_t type);
+plang_type_describe(plang_type_t type,
+                    plang_scope_t scope);
 
 void
 plang_variable_describe(plang_variable_t variable,
@@ -43,6 +44,12 @@ plang_unit_copy_name(plang_unit_t unit);
 
 void
 plang_unit_describe(plang_unit_t unit);
+
+#if PLANG_CLASCAL
+void
+plang_node_method_block_describe(plang_node_t mbnode,
+                                 plang_scope_t scope);
+#endif
 
 const char * PLANG_NULLABLE
 plang_program_copy_name(plang_program_t program);
@@ -157,12 +164,24 @@ plang_constant_describe(plang_constant_t constant)
 
 
 void
-plang_type_describe(plang_type_t type)
+plang_type_describe(plang_type_t type,
+                    plang_scope_t scope)
 {
     plang_token_t identifier = plang_type_get_identifier(type);
     const char *type_name = plang_token_copy_text(identifier);
 
+#if PLANG_CLASCAL
+    if (plang_type_is_class(type, scope)) {
+        plang_log_indent(shared_log, plang_log_level_info,
+                         "Class '%s' {", type_name);
+        // TODO: Get scope for class and describe
+        plang_log_outdent(shared_log, plang_log_level_info, "}");
+    } else {
+        plang_log(shared_log, plang_log_level_info, "'%s';", type_name);
+    }
+#else
     plang_log(shared_log, plang_log_level_info, "'%s';", type_name);
+#endif
 
     free((void *) type_name);
 }
@@ -269,7 +288,7 @@ plang_scope_describe(plang_scope_t scope)
                 = plang_dictionary_copy_all_values(types);
             for (size_t i = 0; i < count; i++) {
                 plang_type_t type = plang_array_get_item(all_types, i);
-                plang_type_describe(type);
+                plang_type_describe(type, scope);
             }
             plang_array_free(all_types);
             plang_log_outdent(shared_log, plang_log_level_info, "}");
@@ -378,10 +397,60 @@ plang_unit_describe(plang_unit_t unit)
     plang_scope_t implementation_scope
         = plang_unit_get_implementation_scope(unit);
     plang_scope_describe(implementation_scope);
+#if PLANG_CLASCAL
+    // TODO: Get unit's method blocks to describe
+    // These will be in the implementation, and each will have a scope.
+    // Each method block can have a creation block with a scope too.
+
+    plang_array_t mbs = plang_unit_copy_method_blocks(unit);
+    if (mbs) {
+        const size_t mbcount = plang_array_get_count(mbs);
+        for (size_t i = 0; i < mbcount; i++) {
+            plang_node_t mbnode = plang_array_get_item(mbs, i);
+            plang_node_method_block_describe(mbnode,
+                                             implementation_scope);
+        }
+        plang_array_free(mbs);
+    }
+#endif
     plang_log_outdent(shared_log, plang_log_level_info, "}");
 
     plang_log_outdent(shared_log, plang_log_level_info, "}");
 }
+
+#if PLANG_CLASCAL
+void
+plang_node_method_block_describe(plang_node_t mbnode,
+                                 plang_scope_t scope)
+{
+    plang_node_t ctinode
+        = plang_node_method_block_get_class_type_identifier(mbnode);
+    plang_token_t class_identifier
+        = plang_node_type_identifier_get_identifier(ctinode);
+    const char *class_name = plang_token_copy_text(class_identifier);
+
+    plang_log_indent(shared_log, plang_log_level_info,
+                     "Methods of Class '%s' {",
+                     class_name);
+    plang_scope_t mbscope = plang_node_method_block_get_scope(mbnode);
+    plang_scope_describe(mbscope);
+
+    plang_node_t cbnode
+        = plang_node_method_block_get_creation_block(mbnode);
+    if (cbnode) {
+        plang_scope_t cbscope
+            = plang_node_creation_block_get_scope(cbnode);
+        plang_log_indent(shared_log, plang_log_level_info,
+                         "Creation Block {");
+        plang_scope_describe(cbscope);
+        plang_log_outdent(shared_log, plang_log_level_info, "}");
+    }
+
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
+
+    free((void *) class_name);
+}
+#endif
 
 
 const char * PLANG_NULLABLE

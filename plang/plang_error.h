@@ -118,6 +118,14 @@ enum plang_error_type {
     plang_error_type_expected_compound_statement,
     plang_error_type_expected_variant,
     plang_error_type_expected_simple_expression,
+
+#if PLANG_CLASCAL
+    plang_error_type_expected_class_identifier,
+    plang_error_type_expected_class_instance,
+    plang_error_type_expected_procedure_call,
+    plang_error_type_expected_function_call,
+    plang_error_type_expected_creation_block,
+#endif
 };
 typedef enum plang_error_type plang_error_type_t;
 

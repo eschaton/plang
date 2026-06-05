@@ -169,6 +169,12 @@ enum plang_token_type {
     plang_token_type_VAR,
     plang_token_type_WHILE,
     plang_token_type_WITH,
+
+#if PLANG_CLASCAL
+    plang_token_type_SUBCLASS,
+    plang_token_type_CLASS,
+    plang_token_type_METHODS,
+#endif
 };
 typedef enum plang_token_type plang_token_type_t;
 
@@ -273,6 +279,9 @@ plang_token_matches(plang_token_t PLANG_NULLABLE token,
  - `BOOLEAN`, a logical `FALSE` or `TRUE`
  - `CHAR`, a character in a string
  - `ANYPTR`, the polymorphic type
+#if PLANG_CLASCAL
+ - `CLASSREF`, the type of a reference to a named class
+#endif
 
  These are used to define the actual built-in types in the preamble, and
  are the lowest level of the type system upon which the rest is built.
@@ -285,8 +294,10 @@ plang_token_identifier_is_built_in_type(plang_token_t token);
  Is the token a built-in ordinal type?
 
  Tells whether the built-in type is one of the built-in ordinal types.
- (Currently all built-in types except `__BUILT_IN_ANYPTR`, which is
- the polymorphic type taken by the built-in memory allocator.)
+ (Currently all built-in types except `__BUILT_IN_ANYPTR` and
+ `__BUILT_IN_CLASSREF`. The former is the polymorphic type taken by the
+ built-in memory allocator, the latter is the equivalent for the Clascal
+ instance allocator.)
  */
 bool
 plang_token_identifier_is_built_in_ordinal_type(plang_token_t token);
@@ -296,8 +307,9 @@ plang_token_identifier_is_built_in_ordinal_type(plang_token_t token);
  Is the token a built-in pointer type?
 
  Tells whether the built-in type is one of the built-in pointer types.
- (Currently only `__BUILT_IN_ANYPTR`, which is the polymorphic type
- taken by the built-in memory allocator.)
+ (Currently only `__BUILT_IN_ANYPTR` and `__BUILT_IN_CLASSREF`. The
+ former is the polymorphic type taken by the built-in memory allocator,
+ the latter is the equivalent for the Clascal instance allocator.)
  */
 bool
 plang_token_identifier_is_built_in_pointer_type(plang_token_t token);

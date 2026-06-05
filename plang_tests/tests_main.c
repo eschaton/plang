@@ -8,6 +8,9 @@
 
 #include "tests_main.h"
 
+#if PLANG_CLASCAL
+#include "test_clascal_parsing.h"
+#endif
 #include "test_parsing.h"
 #include "test_tokenization.h"
 
@@ -22,6 +25,9 @@ configured_tests_runner(void)
 
     srunner_add_suite(sr, tokenization_suite());
     srunner_add_suite(sr, parsing_suite());
+#if PLANG_CLASCAL
+    srunner_add_suite(sr, clascal_parsing_suite());
+#endif
 
     return sr;
 }

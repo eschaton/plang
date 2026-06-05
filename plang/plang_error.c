@@ -316,6 +316,23 @@ plang_error_message_for_type(plang_error_type_t type)
 
         case plang_error_type_expected_simple_expression:
             return "Expected simple-expression";
+
+#if PLANG_CLASCAL
+        case plang_error_type_expected_class_identifier:
+            return "Expected class identifier";
+
+        case plang_error_type_expected_class_instance:
+            return "Expected class instance";
+
+        case plang_error_type_expected_procedure_call:
+            return "Expected procedure call";
+
+        case plang_error_type_expected_function_call:
+            return "Expected function call";
+
+        case plang_error_type_expected_creation_block:
+            return "Expected creation block";
+#endif
     }
 }
 

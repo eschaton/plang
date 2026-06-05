@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -256,6 +257,9 @@ plang_token_identifier_check_built_in_type(plang_token_t token)
         { "INTPTR", 6, is_ordinal },
         { "ANYPTR", 6, is_pointer },
         { "BOOLEAN", 7, is_ordinal },
+#if PLANG_CLASCAL
+        { "CLASSREF", 8, is_pointer },
+#endif
         { NULL, 0, is_not },
     };
 
@@ -636,6 +640,11 @@ plang_tokenize_reserved_word(plang_parser_t parser,
         { "VAR", 3, plang_token_type_VAR },
         { "WHILE", 5, plang_token_type_WHILE },
         { "WITH", 4, plang_token_type_WITH },
+#if PLANG_CLASCAL
+        { "SUBCLASS", 8, plang_token_type_SUBCLASS },
+        { "CLASS", 5, plang_token_type_CLASS },
+        { "METHODS", 7, plang_token_type_METHODS },
+#endif
         { NULL, 0, plang_token_type_unknown },
     };
 

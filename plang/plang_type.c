@@ -114,7 +114,18 @@ plang_type_resolve(plang_type_t type,
     do {
         plang_node_t tdtype
             = plang_node_type_declaration_get_type(tdnode);
+#if PLANG_CLASCAL
+        if (tdtype == NULL) {
+            /*
+             This should only happen while parsing a class definition,
+             when declaring a method that takes or returns an instance
+             of the class.
+             */
+            return NULL;
+        }
+#else
         assert(tdtype != NULL);
+#endif
         plang_node_type_t tdtype_type = plang_node_get_type(tdtype);
         if (tdtype_type == plang_node_type_type_identifier) {
             plang_token_t tdtype_identifier
@@ -150,6 +161,10 @@ plang_type_resolve(plang_type_t type,
         type->_kind = plang_type_kind_structured;
     } else if (plang_type_is_pointer(type, scope)) {
         type->_kind = plang_type_kind_pointer;
+#if PLANG_CLASCAL
+    } else if (plang_type_is_class(type, scope)) {
+        type->_kind = plang_type_kind_class;
+#endif
     } else {
         /* Should never happen. */
         assert(false);
@@ -407,6 +422,61 @@ plang_type_is_pointer(plang_type_t PLANG_NULLABLE type,
 
     return (ctnode_type == plang_node_type_pointer_type);
 }
+
+
+#if PLANG_CLASCAL
+bool
+plang_type_is_class(plang_type_t _Nullable type,
+                    plang_scope_t _Nonnull scope)
+{
+    if (type == NULL) return false;
+
+    if (type->_kind == plang_type_kind_class) return true;
+
+    /*
+     If the type's node is a type declaration with a NULL type, then the
+     type is a class that's still being parsed.
+     */
+    plang_node_t tdnode = type->_node;
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_declaration) {
+        plang_node_t tdtype
+            = plang_node_type_declaration_get_type(tdnode);
+        if (tdtype == NULL) {
+            return true;
+        }
+    } else if (tdnode_type == plang_node_type_type_identifier) {
+        /*
+         If the type's node is a type identifier, that means it's a
+         built-in type. Since there's no such thing as a built-in class
+         type, this can't be one.
+         */
+
+        return false;
+    }
+
+    /*
+     Otherwise, recursively determine the concrete type to which this
+     type corresponds, and return whether that's a pointer type.
+     */
+
+    plang_node_t ctnode = plang_type_get_concrete_type_node(type,
+                                                            scope);
+    plang_node_type_t ctnode_type
+        = (ctnode != NULL) ? plang_node_get_type(ctnode)
+                           : plang_node_type_unknown;
+
+    /*
+     Return whether the concrete type node (if any was found)
+     represents a class type (whether a forward class or a real class)
+     or whether it was a red herring.
+     */
+
+    return ((ctnode != NULL) &&
+            ((ctnode_type == plang_node_type_forward_class_type) ||
+             (ctnode_type == plang_node_type_class_type)));
+}
+#endif
 
 
 PLANG_SOURCE_END

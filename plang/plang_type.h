@@ -54,8 +54,8 @@ plang_type_get_node(plang_type_t type);
  The kinds of type supported by `plang`.
 
  There are several different kinds of types supported by `plang`:
- Ordinal types, real types, string types, structured types, and
- pointer types.
+ Ordinal types, real types, string types, structured types, poointer
+ types, and class types.
 
  - NOTE: This is slightly different than the predicate functions below,
          since records are one kind of structured type.
@@ -67,6 +67,9 @@ typedef enum {
     plang_type_kind_string,
     plang_type_kind_structured,
     plang_type_kind_pointer,
+#if PLANG_CLASCAL
+    plang_type_kind_class,
+#endif
 } plang_type_kind_t;
 
 
@@ -151,6 +154,13 @@ plang_type_is_record(plang_type_t PLANG_NULLABLE type,
 bool
 plang_type_is_pointer(plang_type_t PLANG_NULLABLE type,
                       plang_scope_t scope);
+
+
+#if PLANG_CLASCAL
+bool
+plang_type_is_class(plang_type_t _Nullable type,
+                    plang_scope_t _Nonnull scope);
+#endif
 
 
 PLANG_HEADER_END

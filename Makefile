@@ -34,12 +34,13 @@ DEMO_OBJS = \
 	$(OBJDIR)/plang_demo.o
 
 TEST_OBJS = \
+	$(OBJDIR)/test_clascal_parsing.o \
 	$(OBJDIR)/test_parsing.o \
 	$(OBJDIR)/test_tokenization.o \
 	$(OBJDIR)/tests_main.o \
 	$(OBJDIR)/tests_support.o
 
-CFLAGS += -Os -I plang -Wall
+CFLAGS += -Os -I plang -Wall -DPLANG_CLASCAL
 
 PKG_CONFIG = $(shell which pkg-config)
 CHECK_CFLAGS = $(shell $(PKG_CONFIG) --cflags check) -Dtests_main=main

@@ -16,6 +16,7 @@ PLANG_HEADER_BEGIN
 
 /* Forward Declarations*/
 
+typedef struct plang_array *plang_array_t;
 typedef struct plang_node *plang_node_t;
 typedef struct plang_parser *plang_parser_t;
 typedef struct plang_scope *plang_scope_t;
@@ -54,6 +55,12 @@ plang_unit_get_interface_scope(plang_unit_t unit);
 
 plang_scope_t
 plang_unit_get_implementation_scope(plang_unit_t unit);
+
+
+#if PLANG_CLASCAL
+plang_array_t PLANG_NULLABLE
+plang_unit_copy_method_blocks(plang_unit_t unit);
+#endif
 
 
 PLANG_HEADER_END
