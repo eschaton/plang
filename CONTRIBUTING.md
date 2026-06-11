@@ -1,7 +1,7 @@
 # Contribution Agreement
 
 By submitting issues, patches, pull requests, reviews, or other work
-(colletively "submissions") to the plang project ("the project"), you
+(collectively "submissions") to the plang project ("the project"), you
 are agreeing to this Contributor Agreement. Do not do so unless you, the
 submitter, agree to these terms and are able to enter into a contract
 with Christopher M. Hanson, his successors, and/or designeess
