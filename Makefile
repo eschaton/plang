@@ -25,7 +25,7 @@ OBJS = \
 	plang/plang_unit.o \
 	plang/plang_variable.o
 
-CFLAGS += -Os -Wall
+CFLAGS += -Os -Wall -DPLANG_MAIN
 
 .o: .c
 	$(CC) $(CFLAGS) -c $< -o $@

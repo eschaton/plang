@@ -42,6 +42,16 @@ plang_source_new(const char * PLANG_NULLABLE vpath,
 
 
 /*!
+ Create a new source of source text from a file on disk.
+
+ Reads the contents of the file at \a path and returns a new source of
+ source text based on it.
+ */
+plang_source_t PLANG_NULLABLE
+plang_source_new_from_file(const char *path);
+
+
+/*!
  Dispose of a source of source text.
  */
 void

@@ -29,12 +29,60 @@ plang_source_new(const char * PLANG_NULLABLE vpath,
         } else {
             source->_vpath = plang_source_create_vpath(buf, buf_len);
         }
+        if (source->_vpath == NULL) goto error;
 
-        source->_buf = strdup(buf);
+        char *newbuf = calloc(sizeof(char), buf_len);
+        if (newbuf == NULL) goto error;
+
+        memcpy(newbuf, buf, buf_len);
+
+        source->_buf = newbuf;
         source->_buf_len = buf_len;
     }
 
     return source;
+
+error:
+    plang_source_free(source);
+    return NULL;
+}
+
+
+plang_source_t PLANG_NULLABLE
+plang_source_new_from_file(const char *path)
+{
+    plang_source_t preamble = NULL;
+
+    char *rpath = realpath(path, NULL);
+    if (rpath != NULL) {
+        FILE *file = fopen(rpath, "r");
+        if (file != NULL) {
+            int seek_success = fseeko(file, 0, SEEK_END);
+            if (seek_success != -1) {
+                off_t len = ftello(file);
+                if (len != -1) {
+                    (void) fseeko(file, 0, SEEK_SET);
+                    size_t buf_len = (size_t) len;
+                    char *buf = calloc(sizeof(char), buf_len);
+                    if (buf != NULL) {
+                        ssize_t items = fread(buf, len, 1, file);
+                        if (items == 1) {
+                            preamble
+                                = plang_source_new(rpath, buf, len);
+                        }
+                        
+                        free(buf);
+                    }
+                }
+            }
+
+            fclose(file);
+        }
+        
+        free(rpath);
+    }
+
+    return preamble;
 }
 
 

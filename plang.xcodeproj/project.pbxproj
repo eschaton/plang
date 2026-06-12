@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9F6D614B2FDD08D800FEE7B7 /* libplang.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FBEF7492FB3D80800BACE77 /* libplang.dylib */; };
 		9FBEF7582FB3D82300BACE77 /* libplang.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FBEF7492FB3D80800BACE77 /* libplang.dylib */; };
 /* End PBXBuildFile section */
 
@@ -21,6 +22,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		9F6D61412FDD08B900FEE7B7 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolder = None;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		9F7192902FC554C3005491E1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			dstPath = /usr/local/libexec/plang;
@@ -35,6 +44,7 @@
 		9F0552AD2FDA2CC000C46327 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 		9F0552AE2FDA2CC000C46327 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		9F0552AF2FDA2CC000C46327 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		9F6D61432FDD08B900FEE7B7 /* plang_driver */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plang_driver; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FBEF7492FB3D80800BACE77 /* libplang.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libplang.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "plang Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -101,6 +111,12 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		9F6D61402FDD08B900FEE7B7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				9F6D614B2FDD08D800FEE7B7 /* libplang.dylib in Frameworks */,
+			);
+		};
 		9FBEF7472FB3D80800BACE77 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -132,6 +148,7 @@
 			children = (
 				9FBEF7492FB3D80800BACE77 /* libplang.dylib */,
 				9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */,
+				9F6D61432FDD08B900FEE7B7 /* plang_driver */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -147,6 +164,21 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		9F6D61422FDD08B900FEE7B7 /* plang_driver */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9F6D61472FDD08B900FEE7B7 /* Build configuration list for PBXNativeTarget "plang_driver" */;
+			buildPhases = (
+				9F6D613F2FDD08B900FEE7B7 /* Sources */,
+				9F6D61402FDD08B900FEE7B7 /* Frameworks */,
+				9F6D61412FDD08B900FEE7B7 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			name = plang_driver;
+			productName = plang_driver;
+			productReference = 9F6D61432FDD08B900FEE7B7 /* plang_driver */;
+			productType = "com.apple.product-type.tool";
+		};
 		9FBEF7482FB3D80800BACE77 /* plang */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9FBEF74D2FB3D80800BACE77 /* Build configuration list for PBXNativeTarget "plang" */;
@@ -196,6 +228,9 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					9F6D61422FDD08B900FEE7B7 = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					9FBEF7482FB3D80800BACE77 = {
 						CreatedOnToolsVersion = 26.4.1;
 					};
@@ -220,6 +255,7 @@
 			targets = (
 				9FBEF7482FB3D80800BACE77 /* plang */,
 				9FBEF7532FB3D82200BACE77 /* plang Tests */,
+				9F6D61422FDD08B900FEE7B7 /* plang_driver */,
 			);
 		};
 /* End PBXProject section */
@@ -233,6 +269,11 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		9F6D613F2FDD08B900FEE7B7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		9FBEF7462FB3D80800BACE77 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -254,6 +295,26 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		9F6D61482FDD08B900FEE7B7 /* Debug configuration for PBXNativeTarget "plang_driver" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = V4FN2V327V;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		9F6D61492FDD08B900FEE7B7 /* Release configuration for PBXNativeTarget "plang_driver" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = V4FN2V327V;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		9FBEF74B2FB3D80800BACE77 /* Debug configuration for PBXProject "plang" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -300,6 +361,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
+					"PLANG_MAIN=1",
 					"$(inherited)",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -314,6 +376,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -361,6 +424,7 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"NDEBUG=1",
+					"PLANG_MAIN=1",
 					"$(inherited)",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -374,6 +438,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -440,6 +505,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		9F6D61472FDD08B900FEE7B7 /* Build configuration list for PBXNativeTarget "plang_driver" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F6D61482FDD08B900FEE7B7 /* Debug configuration for PBXNativeTarget "plang_driver" */,
+				9F6D61492FDD08B900FEE7B7 /* Release configuration for PBXNativeTarget "plang_driver" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		9FBEF7442FB3D80800BACE77 /* Build configuration list for PBXProject "plang" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

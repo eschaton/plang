@@ -37,4 +37,28 @@
 #include "plang_dictionary.h"
 
 
+/* Driver */
+
+/*! An error-output function for the minimal driver. */
+typedef void (*plang_driver_output_t)(const char * PLANG_NONNULL message);
+
+
+/*!
+ A minimal but complete driver for `plang`.
+
+ This will create and run the parser on a set of sources, optionally
+ with a preamble file, collect any errors that occur, and return them.
+
+ - Parameters:
+   - preamble: A preamble file to use, if any.
+   - sources: Source files, in compilation order.
+
+ - Returns: Success or failure
+ */
+bool
+plang_driver(plang_source_t PLANG_NULLABLE preamble,
+             plang_array_t PLANG_NONNULL sources,
+             plang_driver_output_t PLANG_NULLABLE error_output);
+
+
 #endif /* __plang_h__ */
