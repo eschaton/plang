@@ -47,15 +47,16 @@ typedef void (*plang_driver_output_t)(const char * PLANG_NONNULL message);
  A minimal but complete driver for `plang`.
 
  This will create and run the parser on a set of sources, optionally
- with a preamble file, collect any errors that occur, and return them.
+ with a preamble file, collect any errors that occur, and output them.
 
  - Parameters:
    - preamble: A preamble file to use, if any.
    - sources: Source files, in compilation order.
 
- - Returns: Success or failure
+ - Returns: The parser that was used by the driver, or `NULL` if an
+            error occurred before a parser could be set up.
  */
-bool
+plang_parser_t PLANG_NULLABLE
 plang_driver(plang_source_t PLANG_NULLABLE preamble,
              plang_array_t PLANG_NONNULL sources,
              plang_driver_output_t PLANG_NULLABLE error_output);

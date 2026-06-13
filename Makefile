@@ -23,17 +23,18 @@ OBJS = \
 	plang/plang_token.o \
 	plang/plang_type.o \
 	plang/plang_unit.o \
-	plang/plang_variable.o
+	plang/plang_variable.o \
+	plang_demo/plang_demo.o
 
-CFLAGS += -Os -Wall -DPLANG_MAIN
+CFLAGS += -Os -I plang -Wall 
 
 .o: .c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-plang_driver: Makefile $(OBJS)
+plang_demo_tool: Makefile $(OBJS)
 	$(CC) $(OBJS) -o $@
 
-all: plang_driver
+all: plang_demo_tool
 
 clean:
-	$(RM) plang_driver $(OBJS)
+	$(RM) plang_demo_tool $(OBJS)

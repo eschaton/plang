@@ -18,6 +18,7 @@ PLANG_HEADER_BEGIN
 
 typedef struct plang_node *plang_node_t;
 typedef struct plang_parser *plang_parser_t;
+typedef struct plang_scope *plang_scope_t;
 typedef struct plang_token *plang_token_t;
 
 
@@ -45,6 +46,14 @@ plang_unit_get_identifier(plang_unit_t unit);
 
 plang_node_t
 plang_unit_get_node(plang_unit_t unit);
+
+
+plang_scope_t
+plang_unit_get_interface_scope(plang_unit_t unit);
+
+
+plang_scope_t
+plang_unit_get_implementation_scope(plang_unit_t unit);
 
 
 PLANG_HEADER_END

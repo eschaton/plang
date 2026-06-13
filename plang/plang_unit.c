@@ -10,6 +10,9 @@
 
 #include <stdlib.h>
 
+#include "plang_node.h"
+
+
 PLANG_SOURCE_BEGIN
 
 
@@ -58,6 +61,20 @@ plang_node_t
 plang_unit_get_node(plang_unit_t unit)
 {
     return unit->_node;
+}
+
+
+plang_scope_t
+plang_unit_get_interface_scope(plang_unit_t unit)
+{
+    return plang_node_unit_get_interface_scope(unit->_node);
+}
+
+
+plang_scope_t
+plang_unit_get_implementation_scope(plang_unit_t unit)
+{
+    return plang_node_unit_get_implementation_scope(unit->_node);
 }
 
 

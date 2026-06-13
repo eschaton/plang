@@ -44,7 +44,7 @@
 		9F0552AD2FDA2CC000C46327 /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
 		9F0552AE2FDA2CC000C46327 /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		9F0552AF2FDA2CC000C46327 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		9F6D61432FDD08B900FEE7B7 /* plang_driver */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plang_driver; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F6D61432FDD08B900FEE7B7 /* plang_demo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plang_demo; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FBEF7492FB3D80800BACE77 /* libplang.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libplang.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "plang Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -90,6 +90,11 @@
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		9F1757782FDE004700A3AD8F /* plang_demo */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = plang_demo;
+			sourceTree = "<group>";
+		};
 		9FBEF7552FB3D82200BACE77 /* plang Tests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -139,6 +144,7 @@
 				9F0552AD2FDA2CC000C46327 /* CONTRIBUTING.md */,
 				9FBEF7652FB3E06600BACE77 /* plang */,
 				9FBEF7552FB3D82200BACE77 /* plang Tests */,
+				9F1757782FDE004700A3AD8F /* plang_demo */,
 				9FBEF74A2FB3D80800BACE77 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -148,7 +154,7 @@
 			children = (
 				9FBEF7492FB3D80800BACE77 /* libplang.dylib */,
 				9FBEF7542FB3D82200BACE77 /* plang Tests.xctest */,
-				9F6D61432FDD08B900FEE7B7 /* plang_driver */,
+				9F6D61432FDD08B900FEE7B7 /* plang_demo */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -164,9 +170,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		9F6D61422FDD08B900FEE7B7 /* plang_driver */ = {
+		9F6D61422FDD08B900FEE7B7 /* plang_demo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9F6D61472FDD08B900FEE7B7 /* Build configuration list for PBXNativeTarget "plang_driver" */;
+			buildConfigurationList = 9F6D61472FDD08B900FEE7B7 /* Build configuration list for PBXNativeTarget "plang_demo" */;
 			buildPhases = (
 				9F6D613F2FDD08B900FEE7B7 /* Sources */,
 				9F6D61402FDD08B900FEE7B7 /* Frameworks */,
@@ -174,9 +180,12 @@
 			);
 			buildRules = (
 			);
-			name = plang_driver;
+			fileSystemSynchronizedGroups = (
+				9F1757782FDE004700A3AD8F /* plang_demo */,
+			);
+			name = plang_demo;
 			productName = plang_driver;
-			productReference = 9F6D61432FDD08B900FEE7B7 /* plang_driver */;
+			productReference = 9F6D61432FDD08B900FEE7B7 /* plang_demo */;
 			productType = "com.apple.product-type.tool";
 		};
 		9FBEF7482FB3D80800BACE77 /* plang */ = {
@@ -255,7 +264,7 @@
 			targets = (
 				9FBEF7482FB3D80800BACE77 /* plang */,
 				9FBEF7532FB3D82200BACE77 /* plang Tests */,
-				9F6D61422FDD08B900FEE7B7 /* plang_driver */,
+				9F6D61422FDD08B900FEE7B7 /* plang_demo */,
 			);
 		};
 /* End PBXProject section */
@@ -295,7 +304,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		9F6D61482FDD08B900FEE7B7 /* Debug configuration for PBXNativeTarget "plang_driver" */ = {
+		9F6D61482FDD08B900FEE7B7 /* Debug configuration for PBXNativeTarget "plang_demo" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -305,7 +314,7 @@
 			};
 			name = Debug;
 		};
-		9F6D61492FDD08B900FEE7B7 /* Release configuration for PBXNativeTarget "plang_driver" */ = {
+		9F6D61492FDD08B900FEE7B7 /* Release configuration for PBXNativeTarget "plang_demo" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -505,11 +514,11 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9F6D61472FDD08B900FEE7B7 /* Build configuration list for PBXNativeTarget "plang_driver" */ = {
+		9F6D61472FDD08B900FEE7B7 /* Build configuration list for PBXNativeTarget "plang_demo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9F6D61482FDD08B900FEE7B7 /* Debug configuration for PBXNativeTarget "plang_driver" */,
-				9F6D61492FDD08B900FEE7B7 /* Release configuration for PBXNativeTarget "plang_driver" */,
+				9F6D61482FDD08B900FEE7B7 /* Debug configuration for PBXNativeTarget "plang_demo" */,
+				9F6D61492FDD08B900FEE7B7 /* Release configuration for PBXNativeTarget "plang_demo" */,
 			);
 			defaultConfigurationName = Release;
 		};

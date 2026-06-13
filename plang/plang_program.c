@@ -10,6 +10,10 @@
 
 #include <stdlib.h>
 
+#include "plang_node.h"
+#include "plang_scope.h"
+
+
 PLANG_SOURCE_BEGIN
 
 
@@ -58,6 +62,13 @@ plang_node_t
 plang_program_get_node(plang_program_t program)
 {
     return program->_node;
+}
+
+
+plang_scope_t
+plang_program_get_scope(plang_program_t program)
+{
+    return plang_node_program_get_scope(program->_node);
 }
 
 

@@ -24,16 +24,6 @@ struct plang_token {
 };
 
 
-/*!
- Get a copy of the text of the token.
- 
- - WARNING: The memory for the text is allocated with ``calloc(3)`` and
-            must be freed with ``free(3)`` by the caller.
- */
-const char * PLANG_NULLABLE
-plang_token_copy_text(plang_token_t PLANG_NULLABLE token);
-
-
 PLANG_HEADER_END
 
 #endif /* __plang_token_internal__h__ */

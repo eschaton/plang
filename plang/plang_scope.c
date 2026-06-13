@@ -145,6 +145,13 @@ plang_scope_constant_lookup(plang_scope_t scope,
 }
 
 
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_constants(plang_scope_t scope)
+{
+    return plang_dictionary_copy(scope->_constants);
+}
+
+
 bool
 plang_scope_type_register(plang_scope_t scope,
                           plang_type_t type)
@@ -174,6 +181,13 @@ plang_scope_type_lookup(plang_scope_t scope,
     }
     
     return type;
+}
+
+
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_types(plang_scope_t scope)
+{
+    return plang_dictionary_copy(scope->_types);
 }
 
 
@@ -213,6 +227,13 @@ plang_scope_variable_lookup(plang_scope_t scope,
 }
 
 
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_variables(plang_scope_t scope)
+{
+    return plang_dictionary_copy(scope->_variables);
+}
+
+
 bool
 plang_scope_procedure_register(plang_scope_t scope,
                                plang_procedure_t procedure)
@@ -249,6 +270,13 @@ plang_scope_procedure_lookup(plang_scope_t scope,
 }
 
 
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_procedures(plang_scope_t scope)
+{
+    return plang_dictionary_copy(scope->_procedures);
+}
+
+
 bool
 plang_scope_function_register(plang_scope_t scope,
                               plang_function_t function)
@@ -282,6 +310,13 @@ plang_scope_function_lookup(plang_scope_t scope,
     }
 
     return function;
+}
+
+
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_functions(plang_scope_t scope)
+{
+    return plang_dictionary_copy(scope->_functions);
 }
 
 

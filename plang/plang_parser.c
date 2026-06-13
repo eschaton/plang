@@ -168,6 +168,20 @@ plang_parser_set_preamble(plang_parser_t parser,
 }
 
 
+plang_source_t PLANG_NULLABLE
+plang_parser_get_preamble(plang_parser_t parser)
+{
+    return parser->_preamble_source;
+}
+
+
+plang_array_t
+plang_parser_copy_sources(plang_parser_t parser)
+{
+    return plang_array_copy(parser->_sources);
+}
+
+
 plang_node_t PLANG_NULLABLE
 plang_parser_run_once(plang_parser_t parser,
                       plang_source_t source)
@@ -468,6 +482,13 @@ plang_program_t PLANG_NULLABLE
 plang_parser_get_program(plang_parser_t parser)
 {
     return parser->_program;
+}
+
+
+plang_unit_t PLANG_NULLABLE
+plang_parser_get_preamble_unit(plang_parser_t parser)
+{
+    return parser->_preamble_unit;
 }
 
 

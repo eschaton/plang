@@ -19,6 +19,7 @@ PLANG_HEADER_BEGIN
 /* Forward declarations. */
 
 typedef struct plang_constant *plang_constant_t;
+typedef struct plang_dictionary *plang_dictionary_t;
 typedef struct plang_function *plang_function_t;
 typedef struct plang_procedure *plang_procedure_t;
 typedef struct plang_token *plang_token_t;
@@ -78,6 +79,13 @@ plang_scope_constant_lookup(plang_scope_t scope,
 
 
 /*!
+ Get a copy of all the constants in the scope.
+ */
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_constants(plang_scope_t scope);
+
+
+/*!
  Register a type with the scope.
 
  Registration will fail if the type is already represented within
@@ -98,6 +106,13 @@ plang_type_t PLANG_NULLABLE
 plang_scope_type_lookup(plang_scope_t scope,
                         plang_token_t identifier,
                         bool search_parents);
+
+
+/*!
+ Get a copy of all the types in the scope.
+ */
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_types(plang_scope_t scope);
 
 
 /*!
@@ -124,6 +139,13 @@ plang_scope_variable_lookup(plang_scope_t scope,
 
 
 /*!
+ Get a copy of all the variables in the scope.
+ */
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_variables(plang_scope_t scope);
+
+
+/*!
  Register a procedure with the scope.
 
  Registration will fail if the procedure is already represented within
@@ -147,6 +169,13 @@ plang_scope_procedure_lookup(plang_scope_t scope,
 
 
 /*!
+ Get a copy of all the procedures in the scope.
+ */
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_procedures(plang_scope_t scope);
+
+
+/*!
  Register a function with the scope.
 
  Registration will fail if the function is already represented within
@@ -167,6 +196,13 @@ plang_function_t PLANG_NULLABLE
 plang_scope_function_lookup(plang_scope_t scope,
                             plang_token_t identifier,
                             bool search_parents);
+
+
+/*!
+ Get a copy of all the functions in the scope.
+ */
+plang_dictionary_t PLANG_NULLABLE
+plang_scope_copy_functions(plang_scope_t scope);
 
 
 PLANG_HEADER_END

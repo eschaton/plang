@@ -213,6 +213,16 @@ const char * PLANG_NULLABLE
 plang_token_get_text(plang_token_t token);
 
 
+/*!
+ Get a copy of the text of the token.
+
+ - WARNING: The memory for the text is allocated with ``calloc(3)`` and
+            must be freed with ``free(3)`` by the caller.
+ */
+const char * PLANG_NULLABLE
+plang_token_copy_text(plang_token_t PLANG_NULLABLE token);
+
+
 /*! Compare identifier token with a string for equality. */
 bool
 plang_token_identifier_equals(plang_token_t PLANG_NULLABLE token,

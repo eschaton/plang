@@ -80,6 +80,20 @@ plang_parser_set_preamble(plang_parser_t parser,
 
 
 /*!
+ Get the preamble the parser is using, if any.
+ */
+plang_source_t PLANG_NULLABLE
+plang_parser_get_preamble(plang_parser_t parser);
+
+
+/*!
+ Get a copy of the array of sources the parser is using.
+ */
+plang_array_t
+plang_parser_copy_sources(plang_parser_t parser);
+
+
+/*!
  Run the parser.
 
  Parses the source text, returning `true` if parsing succeeded.
@@ -199,6 +213,18 @@ plang_parser_copy_errors(plang_parser_t parser);
  */
 plang_program_t PLANG_NULLABLE
 plang_parser_get_program(plang_parser_t parser);
+
+
+/*!
+ Get the parsed preamble unit.
+
+ If there hasn't been a preamble unit parsed yet, returns `NULL`.
+
+ - NOTE: Any preamble unit is **not** included in the array returned by
+         ``plang_parser_copy_all_units``.
+ */
+plang_unit_t PLANG_NULLABLE
+plang_parser_get_preamble_unit(plang_parser_t parser);
 
 
 /*!
