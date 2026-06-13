@@ -77,7 +77,6 @@ plang_parser_free(plang_parser_t PLANG_NULLABLE parser)
     /* Sources are only referenced by the parser, not owned by it. */
 
     parser->_preamble_source = NULL;
-    plang_array_free(parser->_sources);
 
     if (parser->_tokens) {
         for (size_t i = 0; i < parser->_tokens_count; i++) {
