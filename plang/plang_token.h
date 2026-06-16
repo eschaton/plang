@@ -180,6 +180,18 @@ plang_token_new(plang_token_type_t type,
                 const plang_range_t range);
 
 
+/*!
+ Create a token representing an anonymous type identifier.
+
+ An anonymous type identifier is an identifier synthesized for the type
+ declared in the given source and range, which is distinct from but
+ congruent to all other types with an equivalent declaration.
+ */
+plang_token_t PLANG_NULLABLE
+plang_token_new_anonymous_type_identifier(plang_source_t source,
+                                          const plang_range_t range);
+
+
 /*! Dispose of a token. */
 void
 plang_token_free(plang_token_t PLANG_NULLABLE token);

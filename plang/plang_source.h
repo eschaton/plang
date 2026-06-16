@@ -13,6 +13,8 @@
 
 #include <stdlib.h>
 
+#include "plang_range.h"
+
 PLANG_HEADER_BEGIN
 
 
@@ -89,6 +91,15 @@ const char * PLANG_NULLABLE
 plang_source_get_chars(plang_source_t source,
                        size_t position);
 
+
+/*!
+ Generate an anonymous symbol for the given range.
+
+ - NOTE: This should only be used for anonymous type identifiers.
+ */
+char * PLANG_NULLABLE
+plang_source_gensym(plang_source_t source,
+                    plang_range_t range);
 
 PLANG_HEADER_END
 

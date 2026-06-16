@@ -21,6 +21,7 @@ struct plang_token {
     plang_token_type_t _type;   /*!< Token type. */
     plang_source_t _source;     /*!< Source contining token. */
     plang_range_t _range;       /*!< Textual range of token. */
+    char * PLANG_NULLABLE _gensym;  /*!< Generated symbol. */
 };
 
 

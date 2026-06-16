@@ -151,4 +151,19 @@ plang_source_create_vpath(const char *buf,
 }
 
 
+char * PLANG_NULLABLE
+plang_source_gensym(plang_source_t source,
+                    plang_range_t range)
+{
+    char result[PATH_MAX];
+
+    /* Return something that's unique enough for now. */
+
+    snprintf(result, PATH_MAX, "%s:(%zu,%zu)",
+             source->_vpath, range.start, range.length);
+
+    return strdup(result);
+}
+
+
 PLANG_SOURCE_END

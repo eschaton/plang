@@ -21,6 +21,7 @@ PLANG_HEADER_BEGIN
 typedef struct plang_constant *plang_constant_t;
 typedef struct plang_dictionary *plang_dictionary_t;
 typedef struct plang_function *plang_function_t;
+typedef struct plang_node *plang_node_t;
 typedef struct plang_procedure *plang_procedure_t;
 typedef struct plang_token *plang_token_t;
 typedef struct plang_type *plang_type_t;
@@ -106,6 +107,20 @@ plang_type_t PLANG_NULLABLE
 plang_scope_type_lookup(plang_scope_t scope,
                         plang_token_t identifier,
                         bool search_parents);
+
+
+/*!
+ Look up a type given a non-identifier ("anonymous") type node.
+
+ Types can be declared anonymously through use in a variable declaration
+ without first having been given an identifier in a type declaration.
+ This allows them to be looked up by their type node, rather than by
+ their synthesized identifier.
+ */
+plang_type_t PLANG_NULLABLE
+plang_scope_type_lookup_anonymous_type(plang_scope_t scope,
+                                       plang_node_t type_node,
+                                       bool search_parents);
 
 
 /*!

@@ -228,6 +228,11 @@ plang_node_variable_reference_get_type(plang_node_t node,
                                        plang_scope_t scope);
 
 
+/*! Get the _result-type_ node for a _function-heading_ node. */
+plang_node_t
+plang_node_function_heading_get_result_type(plang_node_t node);
+
+
 /*! Get the type for a _result-type_ node. */
 plang_node_t
 plang_node_result_type_get_type(plang_node_t node);

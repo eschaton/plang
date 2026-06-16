@@ -31,6 +31,23 @@ plang_token_new(plang_token_type_t type,
         token->_type = type;
         token->_source = source;
         token->_range = range;
+        token->_gensym = NULL;
+    }
+
+    return token;
+}
+
+
+plang_token_t PLANG_NULLABLE
+plang_token_new_anonymous_type_identifier(plang_source_t source,
+                                          const plang_range_t range)
+{
+    plang_token_t token = calloc(sizeof(struct plang_token), 1);
+    if (token) {
+        token->_type = plang_token_type_identifier;
+        token->_source = source;
+        token->_range = range;
+        token->_gensym = plang_source_gensym(source, range);
     }
 
     return token;
@@ -41,6 +58,7 @@ void
 plang_token_free(plang_token_t PLANG_NULLABLE token)
 {
     if (token) {
+        free(token->_gensym);
         free(token);
     }
 }
@@ -70,8 +88,13 @@ plang_token_get_range(plang_token_t token)
 const char * PLANG_NULLABLE
 plang_token_get_text(plang_token_t token)
 {
-    if (token->_range.length == 0) return NULL;
-    return plang_source_get_chars(token->_source, token->_range.start);
+    if (token->_gensym == NULL) {
+        if (token->_range.length == 0) return NULL;
+        return plang_source_get_chars(token->_source,
+                                      token->_range.start);
+    } else {
+        return token->_gensym;
+    }
 }
 
 
@@ -80,14 +103,18 @@ plang_token_copy_text(plang_token_t PLANG_NULLABLE token)
 {
     char *text = NULL;
     
-    text = calloc(sizeof(char), token->_range.length + 1);
-    if (text) {
-        strlcpy(text,
-                plang_source_get_chars(token->_source,
-                                       token->_range.start),
-                token->_range.length + 1);
+    if (token->_gensym == NULL) {
+        text = calloc(sizeof(char), token->_range.length + 1);
+        if (text) {
+            strlcpy(text,
+                    plang_source_get_chars(token->_source,
+                                           token->_range.start),
+                    token->_range.length + 1);
+        }
+    } else {
+        text = strdup(token->_gensym);
     }
-    
+
     return text;
 }
 
@@ -100,15 +127,19 @@ plang_token_identifier_equals(plang_token_t PLANG_NULLABLE token,
 
     const size_t string_len = strlen(string);
 
-    /* Do trivial rejections first. */
+    if (token->_gensym == NULL) {
+        /* Do trivial rejections first. */
 
-    if (token->_range.length != string_len) return false;
+        if (token->_range.length != string_len) return false;
 
-    /* Do expensive comparison last. */
+        /* Do expensive comparison last. */
 
-    const char *text = plang_token_get_text(token);
+        const char *text = plang_token_get_text(token);
 
-    return (strncasecmp(text, string, string_len) == 0);
+        return (strncasecmp(text, string, string_len) == 0);
+    } else {
+        return strncasecmp(token->_gensym, string, string_len);
+    }
 }
 
 
@@ -116,26 +147,67 @@ bool plang_token_identifier_comparator(void *key1,
                                        void *key2,
                                        void * PLANG_NULLABLE context)
 {
-    /* Do trivial rejections first. */
+    /* Do trivial acceptance and rejection first. */
 
     plang_token_t id1 = key1;
     plang_token_t id2 = key2;
 
+    /* A token is always equal to itself. */
+
     if (id1 == id2) return true;
 
-    plang_range_t r1 = plang_token_get_range(id1);
-    plang_range_t r2 = plang_token_get_range(id2);
+    /* Tokens of different types are never equal to each other. */
 
-    if (r1.length != r2.length) return false;
+    if (id1->_type != id2->_type) return false;
 
-    /* Do expensive comparison last. */
+    /*
+     Tokens for reserved words are always equal to each other if they're
+     the same reserved word. No textual comparison necessary.
+     */
+    if (id1->_type >= plang_token_type_PLUS) {
+        return true;
+    }
 
-    const char *t1 = plang_token_get_text(id1);
-    const char *t2 = plang_token_get_text(id2);
+    if ((id1->_gensym == NULL) && (id2->_gensym == NULL)) {
+        /*
+         At this point, anything at other than an anonymous type
+         identifier should be compared as text.
+         */
+        plang_range_t r1 = plang_token_get_range(id1);
+        plang_range_t r2 = plang_token_get_range(id2);
 
-    if (strncmp(t1, t2, r1.length) == 0) return true;
+        if (r1.length != r2.length) return false;
 
-    return false;
+        /* Do expensive comparison last. */
+
+        const char *t1 = plang_token_get_text(id1);
+        const char *t2 = plang_token_get_text(id2);
+
+        if (strncmp(t1, t2, r1.length) == 0) return true;
+
+        return false;
+    } else if ((id1->_gensym != NULL) && (id2->_gensym != NULL)) {
+        /*
+         Anonymous type identifiers must point to the same range in the
+         same source to be equal, not just have the same text. (They are
+         all distinct but type-congruent type declarations.)
+         */
+        plang_source_t s1 = plang_token_get_source(id1);
+        plang_source_t s2 = plang_token_get_source(id2);
+
+        plang_range_t r1 = plang_token_get_range(id1);
+        plang_range_t r2 = plang_token_get_range(id2);
+
+        if ((s1 == s2) && (r1.length == r2.length)) return true;
+
+        return false;
+    } else {
+        /*
+         A comparison between an anonymous type identifier and any other
+         token always fails.
+         */
+        return false;
+    }
 }
 
 

@@ -2756,6 +2756,7 @@ plang_node_variable_declaration_parse(plang_parser_t parser)
         goto bail_out;
     }
 
+    plang_source_t type_source = plang_parser_get_source(parser);
     const size_t type_start = plang_parser_get_position(parser);
     plang_node_t type = plang_node_type_parse(parser);
     if (type == NULL) {
@@ -2766,6 +2767,7 @@ plang_node_variable_declaration_parse(plang_parser_t parser)
         plang_parser_signal_error(parser, error);
         goto bail_out;
     }
+    const size_t type_end = plang_parser_get_position(parser);
     node->_type = type;
 
     plang_token_t semicolon = plang_parser_next_significant_token(parser);
@@ -2778,12 +2780,37 @@ plang_node_variable_declaration_parse(plang_parser_t parser)
         goto bail_out;
     }
 
+    plang_scope_t scope = plang_parser_scope_current(parser);
+
+    /*
+     If the type isn't a type identifier, then its node needs to be
+     registered with the current scope as an implicit, anonymous type
+     declaration. A bogus identifier token will be synthesized for it
+     (bogus in the sense that it doesn't obey the lexical rules for
+     identifiers) and registering such a type should always succeed
+     modulo allocation failure.
+     */
+    if (type->_type != plang_node_type_type_identifier) {
+        plang_token_t variable_type_identifier
+            = plang_token_new_anonymous_type_identifier(type_source,
+                                                        plang_range(type_start,
+                                                                    type_end));
+        assert(variable_type_identifier != NULL);
+
+        plang_type_t variable_type
+            = plang_type_new(parser, variable_type_identifier, type);
+        assert(variable_type != NULL);
+
+        bool registered
+            = plang_scope_type_register(scope, variable_type);
+        assert(registered != false);
+    }
+
     /*
      Register the variables with the current scope. Generate an error if
      the variable already exists within the current scope.
      */
 
-    plang_scope_t scope = plang_parser_scope_current(parser);
     struct plang_node_identifier_list *variable_identifiers
         = (void *)identifier_list;
     const size_t count = plang_array_get_count(variable_identifiers->_identifiers);
@@ -5584,6 +5611,16 @@ plang_node_function_heading_free(struct plang_node_function_heading *ns)
 
     plang_node_free(ns->_formal_parameter_list);
     plang_node_free(ns->_result_type);
+}
+
+plang_node_t
+plang_node_function_heading_get_result_type(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_function_heading);
+
+    struct plang_node_function_heading *ns = (void *) node;
+
+    return ns->_result_type;
 }
 
 plang_node_t PLANG_NULLABLE

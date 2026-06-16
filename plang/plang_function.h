@@ -18,7 +18,9 @@ PLANG_HEADER_BEGIN
 
 typedef struct plang_node *plang_node_t;
 typedef struct plang_parser *plang_parser_t;
+typedef struct plang_scope *plang_scope_t;
 typedef struct plang_token *plang_token_t;
+typedef struct plang_type *plang_type_t;
 
 
 /*! A function in `plang`. */
@@ -45,6 +47,11 @@ plang_function_get_identifier(plang_function_t function);
 
 plang_node_t
 plang_function_get_node(plang_function_t function);
+
+
+plang_type_t
+plang_function_get_result_type(plang_function_t function,
+                               plang_scope_t scope);
 
 
 PLANG_HEADER_END

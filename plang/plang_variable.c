@@ -72,13 +72,28 @@ plang_variable_get_type(plang_variable_t variable,
 {
     plang_node_t variable_type
         = plang_node_variable_declaration_get_type(variable->_node);
-    plang_node_t type_declaration
+    plang_type_t type;
+
+    if (plang_node_get_type(variable_type) == plang_node_type_type_identifier) {
+        /*
+         Types that have an identifier can be looked up by it directly.
+         */
+        plang_node_t type_declaration
         = plang_node_type_get_type_declaration(variable_type);
-    plang_token_t type_identifier
+        plang_token_t type_identifier
         = plang_node_type_declaration_get_identifier(type_declaration);
-    plang_type_t type = plang_scope_type_lookup(scope,
-                                                type_identifier,
-                                                true);
+        type = plang_scope_type_lookup(scope, type_identifier, true);
+    } else {
+        /*
+         Types can be implicitly and anonymously declared as part of a
+         variable declaration, if they have not previously been given an
+         identifier via a type declaration.
+         */
+        type = plang_scope_type_lookup_anonymous_type(scope,
+                                                      variable_type,
+                                                      true);
+    }
+
     return type;
 }
 

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "plang_array.h"
 #include "plang_constant.h"
 #include "plang_dictionary.h"
 #include "plang_function.h"
@@ -110,6 +111,36 @@ plang_scope_item_lookup(plang_dictionary_t dictionary,
 }
 
 
+typedef bool (*plang_item_comparator_t)(void *item,
+                                        void * PLANG_NULLABLE context);
+
+
+void * PLANG_NULLABLE
+plang_scope_item_lookup_by_node(plang_dictionary_t dictionary,
+                                plang_item_comparator_t comp,
+                                void * PLANG_NULLABLE context)
+{
+    void *item = NULL;
+
+    /* Do a linear search of the vlaues, for now. */
+    plang_array_t values = plang_dictionary_copy_all_values(dictionary);
+    if (values == NULL) return NULL;
+
+    const size_t count = plang_array_get_count(values);
+    for (size_t i = 0; i < count; i++) {
+        void *one_item = plang_array_get_item(values, i);
+        if (comp(one_item, context)) {
+            item = one_item;
+            break;
+        }
+    }
+
+    plang_array_free(values);
+
+    return item;
+}
+
+
 bool
 plang_scope_constant_register(plang_scope_t scope,
                               plang_constant_t constant)
@@ -180,6 +211,43 @@ plang_scope_type_lookup(plang_scope_t scope,
         }
     }
     
+    return type;
+}
+
+
+bool
+plang_type_node_comparator(void *item,
+                           void * PLANG_NULLABLE context)
+{
+    plang_type_t type = (plang_type_t) item;
+    plang_node_t node = (plang_node_t) context;
+
+    return (plang_type_get_node(type) == node);
+}
+
+
+plang_type_t
+plang_scope_type_lookup_anonymous_type(plang_scope_t scope,
+                                       plang_node_t node,
+                                       bool search_parents)
+{
+    plang_type_t type = NULL;
+
+    type = plang_scope_item_lookup_by_node(scope->_types,
+                                           plang_type_node_comparator,
+                                           node);
+
+    if ((type == NULL) && search_parents) {
+        for (plang_scope_t next = scope->_parent;
+             (next != NULL) && (type == NULL);
+             next = next->_parent)
+        {
+            type = plang_scope_item_lookup_by_node(next->_types,
+                                                   plang_type_node_comparator,
+                                                   node);
+        }
+    }
+
     return type;
 }
 
