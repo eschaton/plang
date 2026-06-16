@@ -9,6 +9,7 @@
 #include "plang_parser_internal.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,7 +28,8 @@ PLANG_SOURCE_BEGIN
 
 
 plang_parser_t PLANG_NULLABLE
-plang_parser_new(plang_array_t sources)
+plang_parser_new(plang_array_t sources,
+                 plang_log_t log)
 {
     assert(plang_array_get_count(sources) > 0);
 
@@ -37,6 +39,8 @@ plang_parser_new(plang_array_t sources)
         parser->_preamble_unit = NULL;
 
         parser->_sources = sources;
+
+        parser->_log = log;
 
         plang_array_t tokens = plang_array_new(4096);
         if (tokens == NULL) goto error;
@@ -74,9 +78,11 @@ plang_parser_free(plang_parser_t PLANG_NULLABLE parser)
 {
     if (parser == NULL) return;
 
+    parser->_preamble_source = NULL;
+
     /* Sources are only referenced by the parser, not owned by it. */
 
-    parser->_preamble_source = NULL;
+    /* The log is only referenced by the parser, not owned by it. */
 
     if (parser->_tokens) {
         for (size_t i = 0; i < parser->_tokens_count; i++) {
@@ -179,6 +185,55 @@ plang_array_t
 plang_parser_copy_sources(plang_parser_t parser)
 {
     return plang_array_copy(parser->_sources);
+}
+
+
+plang_log_t
+plang_parser_get_log(plang_parser_t parser)
+{
+    return parser->_log;
+}
+
+
+void
+plang_parser_log(plang_parser_t parser,
+                 plang_log_level_t level,
+                 const char *fmt,
+                 ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    plang_logv(parser->_log, level, fmt, ap);
+    va_end(ap);
+}
+
+
+void
+plang_parser_log_indent(plang_parser_t parser,
+                        plang_log_level_t level,
+                        const char *fmt,
+                        ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    plang_log_indentv(parser->_log, level, fmt, ap);
+    va_end(ap);
+}
+
+
+void
+plang_parser_log_outdent(plang_parser_t parser,
+                         plang_log_level_t level,
+                         const char *fmt,
+                         ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    plang_log_outdentv(parser->_log, level, fmt, ap);
+    va_end(ap);
 }
 
 

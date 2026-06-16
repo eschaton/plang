@@ -11,8 +11,11 @@
 
 #include "plang_defines.h"
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <unistd.h>
+
+#include "plang_log.h"
 
 PLANG_HEADER_BEGIN
 
@@ -41,9 +44,12 @@ typedef struct plang_parser *plang_parser_t;
 
  Create a parser ready to parse the source text in the array of sources,
  which are each instances of ``plang_source_t``.
+
+ - WARNING: The parser does **not** take ownership of the sources.
  */
 plang_parser_t PLANG_NULLABLE
-plang_parser_new(plang_array_t sources);
+plang_parser_new(plang_array_t sources,
+                 plang_log_t log);
 
 
 /*!
@@ -91,6 +97,39 @@ plang_parser_get_preamble(plang_parser_t parser);
  */
 plang_array_t
 plang_parser_copy_sources(plang_parser_t parser);
+
+
+/*! Get the log being used by the parser. */
+plang_log_t
+plang_parser_get_log(plang_parser_t parser);
+
+
+/*! Log a message to the parser's log (varargs). */
+void
+plang_parser_log(plang_parser_t parser,
+                 plang_log_level_t level,
+                 const char *fmt,
+                 ...);
+
+
+/*!
+ Log a message to the parser's log and increase the indentation level.
+ */
+void
+plang_parser_log_indent(plang_parser_t parser,
+                        plang_log_level_t level,
+                        const char *fmt,
+                        ...);
+
+
+/*!
+ Decrease the indentation level and log a message to the parser's log.
+ */
+void
+plang_parser_log_outdent(plang_parser_t parser,
+                         plang_log_level_t level,
+                         const char *fmt,
+                         ...);
 
 
 /*!

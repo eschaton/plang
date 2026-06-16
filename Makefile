@@ -13,6 +13,7 @@ OBJS = \
 	plang/plang_dictionary.o \
 	plang/plang_error.o \
 	plang/plang_function.o \
+	plang/plang_log.o \
 	plang/plang_node.o \
 	plang/plang_parser.o \
 	plang/plang_procedure.o \

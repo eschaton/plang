@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
     XCTAssertNotEqual(source, NULL);
     plang_array_t sources = plang_array_new_with_items(source, NULL);
     XCTAssertNotEqual(sources, NULL);
-    plang_parser_t parser = plang_parser_new(sources);
+    plang_parser_t parser = plang_parser_new(sources, self.plang_log);
     XCTAssertNotEqual(parser, NULL);
 
     bool parsed = plang_parser_run(parser);
@@ -70,7 +70,7 @@ NS_ASSUME_NONNULL_BEGIN
     XCTAssertNotEqual(source, NULL);
     plang_array_t sources = plang_array_new_with_items(source, NULL);
     XCTAssertNotEqual(sources, NULL);
-    plang_parser_t parser = plang_parser_new(sources);
+    plang_parser_t parser = plang_parser_new(sources, self.plang_log);
     XCTAssertNotEqual(parser, NULL);
 
     bool parsed = plang_parser_run(parser);
@@ -103,7 +103,7 @@ NS_ASSUME_NONNULL_BEGIN
     XCTAssertNotEqual(source, NULL);
     plang_array_t sources = plang_array_new_with_items(source, NULL);
     XCTAssertNotEqual(sources, NULL);
-    plang_parser_t parser = plang_parser_new(sources);
+    plang_parser_t parser = plang_parser_new(sources, self.plang_log);
     XCTAssertNotEqual(parser, NULL);
     
     bool parsed = plang_parser_run(parser);
@@ -156,7 +156,7 @@ NS_ASSUME_NONNULL_BEGIN
                                                        NULL);
     XCTAssertNotEqual(sources, NULL);
 
-    plang_parser_t parser = plang_parser_new(sources);
+    plang_parser_t parser = plang_parser_new(sources, self.plang_log);
     XCTAssertNotEqual(parser, NULL);
 
     plang_parser_set_preamble(parser, preamble_source);
@@ -199,7 +199,7 @@ NS_ASSUME_NONNULL_BEGIN
     XCTAssertNotEqual(source, NULL);
     plang_array_t sources = plang_array_new_with_items(source, NULL);
     XCTAssertNotEqual(sources, NULL);
-    plang_parser_t parser = plang_parser_new(sources);
+    plang_parser_t parser = plang_parser_new(sources, self.plang_log);
     XCTAssertNotEqual(parser, NULL);
 
     bool parsed = plang_parser_run(parser);

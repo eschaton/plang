@@ -35,13 +35,10 @@
 
 #include "plang_array.h"
 #include "plang_dictionary.h"
+#include "plang_log.h"
 
 
 /* Driver */
-
-/*! An error-output function for the minimal driver. */
-typedef void (*plang_driver_output_t)(const char * PLANG_NONNULL message);
-
 
 /*!
  A minimal but complete driver for `plang`.
@@ -52,6 +49,7 @@ typedef void (*plang_driver_output_t)(const char * PLANG_NONNULL message);
  - Parameters:
    - preamble: A preamble file to use, if any.
    - sources: Source files, in compilation order.
+   - log: The log to write to.
 
  - Returns: The parser that was used by the driver, or `NULL` if an
             error occurred before a parser could be set up.
@@ -59,7 +57,7 @@ typedef void (*plang_driver_output_t)(const char * PLANG_NONNULL message);
 plang_parser_t PLANG_NULLABLE
 plang_driver(plang_source_t PLANG_NULLABLE preamble,
              plang_array_t PLANG_NONNULL sources,
-             plang_driver_output_t PLANG_NULLABLE error_output);
+             plang_log_t PLANG_NONNULL log);
 
 
 #endif /* __plang_h__ */

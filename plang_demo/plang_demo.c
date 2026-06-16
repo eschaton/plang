@@ -16,6 +16,41 @@
 PLANG_SOURCE_BEGIN
 
 
+static plang_log_t shared_log = NULL;
+
+
+void
+plang_demo_output(plang_log_level_t level,
+                  const char *message,
+                  int indent,
+                  void * PLANG_NULLABLE context)
+{
+    /* Write warnings and above to stderr, all else to stdout. */
+
+    FILE *output = (level >= plang_log_level_warning) ? stderr : stdout;
+
+    /* Include the type of log in the output. */
+
+    const char *type;
+    switch (level) {
+        case plang_log_level_debug:   type = "debug";   break;
+        case plang_log_level_info:    type = "info";    break;
+        case plang_log_level_notice:  type = "notice";  break;
+        case plang_log_level_warning: type = "warning"; break;
+        case plang_log_level_error:   type = "error";   break;
+    }
+
+    static char *indentation_template
+        = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
+    int real_indent = (indent > 16) ? 16 : indent;
+    if (real_indent < 0) real_indent = 0;
+    char *indentation = &indentation_template[16 - real_indent];
+
+    fprintf(output, "plang: %s: %s%s" "\n", type, indentation, message);
+    fflush(output);
+}
+
+
 plang_parser_t PLANG_NULLABLE
 plang_raw_driver(const char * PLANG_NULLABLE preamble_path,
                  const char * PLANG_NULLABLE source_paths[],
@@ -28,9 +63,9 @@ plang_raw_driver(const char * PLANG_NULLABLE preamble_path,
     if (preamble_path != NULL) {
         preamble = plang_source_new_from_file(preamble_path);
         if (preamble == NULL) {
-            fprintf(stderr,
-                    "plang: error: 0: failed to read preamble: %s" "\n",
-                    preamble_path);
+            plang_log(shared_log, plang_log_level_error,
+                      "failed to read preamble: %s",
+                      preamble_path);
             goto error;
         }
     }
@@ -53,7 +88,7 @@ plang_raw_driver(const char * PLANG_NULLABLE preamble_path,
         }
     }
 
-    parser = plang_driver(preamble, sources, NULL);
+    parser = plang_driver(preamble, sources, shared_log);
 
     return parser;
 
@@ -74,51 +109,78 @@ error:
 
 
 void
+plang_type_describe(plang_type_t type)
+{
+    plang_token_t identifier = plang_type_get_identifier(type);
+    const char *type_name = plang_token_copy_text(identifier);
+
+    plang_log(shared_log, plang_log_level_info, "'%s';", type_name);
+
+    free((void *) type_name);
+}
+
+
+void
+plang_variable_describe(plang_variable_t variable,
+                        plang_scope_t scope)
+{
+    plang_token_t identifier = plang_variable_get_identifier(variable);
+    const char *variable_name = plang_token_copy_text(identifier);
+
+    plang_type_t type = plang_variable_get_type(variable, scope);
+    plang_token_t type_identifier = plang_type_get_identifier(type);
+    const char *type_name = plang_token_copy_text(type_identifier);
+
+    plang_log(shared_log, plang_log_level_info,
+              "%s: '%s';", variable_name, type_name);
+
+    free((void *) variable_name);
+    free((void *) type_name);
+}
+
+
+void
 plang_scope_describe(plang_scope_t scope)
 {
     plang_dictionary_t constants = plang_scope_copy_constants(scope);
     if (constants) {
-        fprintf(stdout, "\t" "Constants: %zd" "\n",
-                plang_dictionary_get_count(constants));
+        plang_log(shared_log, plang_log_level_info,
+                  "Constants: %zd",
+                  plang_dictionary_get_count(constants));
         plang_dictionary_free(constants);
     }
 
     plang_dictionary_t types = plang_scope_copy_types(scope);
     if (types) {
-        fprintf(stdout, "\t" "Types: %zd" "\n",
-                plang_dictionary_get_count(types));
+        plang_log(shared_log, plang_log_level_info,
+                         "Types: %zd",
+                         plang_dictionary_get_count(types));
         plang_dictionary_free(types);
     }
 
     plang_dictionary_t variables = plang_scope_copy_variables(scope);
     if (variables) {
-        fprintf(stdout, "\t" "Variables: %zd" "\n",
-                plang_dictionary_get_count(variables));
+        plang_log(shared_log, plang_log_level_info,
+                  "Variables: %zd",
+                  plang_dictionary_get_count(variables));
         plang_dictionary_free(variables);
     }
 
     plang_dictionary_t procedures = plang_scope_copy_procedures(scope);
     if (procedures) {
-        fprintf(stdout, "\t" "Procedures: %zd" "\n",
-                plang_dictionary_get_count(procedures));
+        plang_log(shared_log, plang_log_level_info,
+                  "Procedures: %zd",
+                  plang_dictionary_get_count(procedures));
         plang_dictionary_free(procedures);
     }
 
     plang_dictionary_t functions = plang_scope_copy_functions(scope);
     if (functions) {
-        fprintf(stdout, "\t" "Functions: %zd" "\n",
-                plang_dictionary_get_count(functions));
+        plang_log(shared_log, plang_log_level_info,
+                  "Functions: %zd",
+                  plang_dictionary_get_count(functions));
         plang_dictionary_free(functions);
     }
-}
-
-
-const char * PLANG_NULLABLE
-plang_program_copy_name(plang_program_t program)
-{
-    plang_token_t identifier = plang_program_get_identifier(program);
-
-    return plang_token_copy_text(identifier);
 }
 
 
@@ -135,23 +197,33 @@ void
 plang_unit_describe(plang_unit_t unit)
 {
     const char *name = plang_unit_copy_name(unit);
-
-    fprintf(stdout, "Unit '%s' {" "\n", name);
+    plang_log_indent(shared_log, plang_log_level_info, "Unit '%s' {",
+                     name);
     free((void *) name);
 
-    fprintf(stdout, "Interface: {" "\n");
+    plang_log_indent(shared_log, plang_log_level_info, "Interface: {");
     plang_scope_t interface_scope
         = plang_unit_get_interface_scope(unit);
     plang_scope_describe(interface_scope);
-    fprintf(stdout, "}" "\n");
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
 
-    fprintf(stdout, "Implementation: {" "\n");
+    plang_log_indent(shared_log, plang_log_level_info,
+                     "Implementation: {");
     plang_scope_t implementation_scope
         = plang_unit_get_implementation_scope(unit);
     plang_scope_describe(implementation_scope);
-    fprintf(stdout, "}" "\n");
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
 
-    fprintf(stdout, "}" "\n");
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
+}
+
+
+const char * PLANG_NULLABLE
+plang_program_copy_name(plang_program_t program)
+{
+    plang_token_t identifier = plang_program_get_identifier(program);
+
+    return plang_token_copy_text(identifier);
 }
 
 
@@ -160,13 +232,15 @@ plang_program_describe(plang_program_t program)
 {
     const char *name = plang_program_copy_name(program);
 
-    fprintf(stdout, "Program '%s' {" "\n", name);
+    plang_log_indent(shared_log, plang_log_level_info,
+                     "Program '%s' {", name);
     free((void *) name);
 
     plang_scope_t program_scope = plang_program_get_scope(program);
     plang_scope_describe(program_scope);
 
-    fprintf(stdout, "}" "\n");
+    plang_log_outdent(shared_log, plang_log_level_info,
+                      "}", name);
 }
 
 
@@ -175,9 +249,20 @@ main(int argc,
      const char * PLANG_NULLABLE argv[])
 {
     if (argc < 3) {
-        fprintf(stderr, "plang: error: 0: insufficient arguments" "\n");
+        fprintf(stderr, "plang: error: insufficient arguments" "\n");
         return EX_USAGE;
     }
+
+    /* Create the shared log and set it to log everything. */
+
+    shared_log = plang_log_new(plang_demo_output, NULL);
+    if (shared_log == NULL) {
+        fprintf(stderr,
+                "plang: error: failed to create output log" "\n");
+        return EX_OSERR;
+    }
+
+    plang_log_set_default_level(shared_log, plang_log_level_debug);
 
     /* Pass an empty second argument to skip the preamble. */
 
@@ -187,30 +272,32 @@ main(int argc,
                                              source_paths,
                                              argc - 2);
     if (parser == NULL) {
-        fprintf(stderr, "plang: error: 0: error in parser" "\n");
+        plang_log(shared_log, plang_log_level_error,
+                  "error in parser");
         return EX_SOFTWARE;
     }
 
     /* Print some information about what was parsed. */
 
-    fprintf(stdout, "plang: Parse successful (enough)" "\n");
+    plang_log(shared_log, plang_log_level_info,
+              "Parse successful (enough)");
 
     plang_unit_t preamble = plang_parser_get_preamble_unit(parser);
     if (preamble) {
-        fprintf(stdout, "plang: Parsed preamble" "\n");
+        plang_log(shared_log, plang_log_level_info,
+                  "Parsed preamble");
 
         plang_unit_describe(preamble);
     }
 
     plang_dictionary_t units_dict = plang_parser_copy_all_units(parser);
     if (units_dict) {
-        fprintf(stdout, "\n");
-
         plang_array_t units
             = plang_dictionary_copy_all_values(units_dict);
 
         const size_t count = plang_array_get_count(units);
-        fprintf(stdout, "plang: Parsed %zd unit(s)" "\n", count);
+        plang_log(shared_log, plang_log_level_info,
+                  "Parsed %zd unit(s)", count);
 
         for (size_t i = 0; i < count; i++) {
             plang_unit_t unit = plang_array_get_item(units, i);
@@ -224,13 +311,12 @@ main(int argc,
 
     plang_program_t program = plang_parser_get_program(parser);
     if (program) {
-        fprintf(stdout, "\n");
-
-        fprintf(stdout, "Plang: Parsed program" "\n");
-
         plang_program_describe(program);
 
     }
+
+    plang_log_free(shared_log);
+    shared_log = NULL;
 
     return EX_OK;
 }

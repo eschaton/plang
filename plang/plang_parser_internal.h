@@ -50,6 +50,9 @@ struct plang_parser {
      */
     plang_source_t _source;
 
+    /*! The log used by the parser. */
+    plang_log_t _log;
+
     /*!
      Current tokenization position within the current source.
 
