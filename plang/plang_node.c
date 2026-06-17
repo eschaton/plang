@@ -5962,6 +5962,16 @@ plang_node_parameter_declaration_free(struct plang_node_parameter_declaration *n
     plang_node_free(ns->_type_identifier);
 }
 
+plang_node_t
+plang_node_parameter_declaration_get_type_identifier(plang_node_t node)
+{
+    assert(node->_type == plang_node_type_parameter_declaration);
+
+    struct plang_node_parameter_declaration *ns = (void *) node;
+
+    return ns->_type_identifier;
+}
+
 
 /* MARK: - Programs */
 

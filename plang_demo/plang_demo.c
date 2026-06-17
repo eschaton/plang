@@ -16,6 +16,42 @@
 PLANG_SOURCE_BEGIN
 
 
+/* Forward Declarations */
+
+void
+plang_constant_decribe(plang_constant_t constant);
+
+void
+plang_type_describe(plang_type_t type);
+
+void
+plang_variable_describe(plang_variable_t variable,
+                        plang_scope_t scope);
+
+void
+plang_procedure_describe(plang_procedure_t procedure);
+
+void
+plang_function_describe(plang_function_t function,
+                        plang_scope_t scope);
+
+void
+plang_scope_describe(plang_scope_t scope);
+
+const char * PLANG_NULLABLE
+plang_unit_copy_name(plang_unit_t unit);
+
+void
+plang_unit_describe(plang_unit_t unit);
+
+const char * PLANG_NULLABLE
+plang_program_copy_name(plang_program_t program);
+
+void
+plang_program_describe(plang_program_t program);
+
+
+/*! The log used by the demo for its output. */
 static plang_log_t shared_log = NULL;
 
 
@@ -158,8 +194,12 @@ plang_procedure_describe(plang_procedure_t procedure)
         = plang_procedure_get_identifier(procedure);
     const char *procedure_name = plang_token_copy_text(identifier);
 
-    plang_log(shared_log, plang_log_level_info,
-              "PROCEDURE '%s';", procedure_name);
+    plang_log_indent(shared_log, plang_log_level_info,
+                     "PROCEDURE '%s' {", procedure_name);
+    plang_scope_t procedure_scope
+        = plang_procedure_get_scope(procedure);
+    plang_scope_describe(procedure_scope);
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
 
     free((void *) procedure_name);
 }
@@ -180,9 +220,12 @@ plang_function_describe(plang_function_t function,
     const char *result_type_name
         = plang_token_copy_text(result_type_identifier);
 
-    plang_log(shared_log, plang_log_level_info,
-              "FUNCTION '%s': '%s';", function_name,
-              result_type_name);
+    plang_log_indent(shared_log, plang_log_level_info,
+                     "FUNCTION '%s': '%s' {", function_name,
+                     result_type_name);
+    plang_scope_t function_scope = plang_function_get_scope(function);
+    plang_scope_describe(function_scope);
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
 
     free((void *) function_name);
     free((void *) result_type_name);
@@ -194,90 +237,114 @@ plang_scope_describe(plang_scope_t scope)
 {
     plang_dictionary_t constants = plang_scope_copy_constants(scope);
     if (constants) {
-        plang_log_indent(shared_log, plang_log_level_info,
-                         "Constants (%zd): {",
-                         plang_dictionary_get_count(constants));
-        plang_array_t all_constants
-            = plang_dictionary_copy_all_values(constants);
-        const size_t count = plang_array_get_count(all_constants);
-        for (size_t i = 0; i < count; i++) {
-            plang_constant_t constant
-                = plang_array_get_item(all_constants, i);
-            plang_constant_describe(constant);
+        const size_t count = plang_dictionary_get_count(constants);
+        if (count > 0) {
+            plang_log_indent(shared_log, plang_log_level_info,
+                             "Constants (%zd): {",
+                             plang_dictionary_get_count(constants));
+            plang_array_t all_constants
+                = plang_dictionary_copy_all_values(constants);
+            for (size_t i = 0; i < count; i++) {
+                plang_constant_t constant
+                    = plang_array_get_item(all_constants, i);
+                plang_constant_describe(constant);
+            }
+            plang_array_free(all_constants);
+            plang_log_outdent(shared_log, plang_log_level_info, "}");
+        } else {
+            plang_log(shared_log, plang_log_level_info,
+                      "Constants (0);");
         }
-        plang_array_free(all_constants);
-        plang_log_outdent(shared_log, plang_log_level_info, "}");
         plang_dictionary_free(constants);
     }
 
     plang_dictionary_t types = plang_scope_copy_types(scope);
     if (types) {
-        plang_log_indent(shared_log, plang_log_level_info,
-                         "Types (%zd): {",
-                         plang_dictionary_get_count(types));
-        plang_array_t all_types
-            = plang_dictionary_copy_all_values(types);
-        const size_t count = plang_array_get_count(all_types);
-        for (size_t i = 0; i < count; i++) {
-            plang_type_t type = plang_array_get_item(all_types, i);
-            plang_type_describe(type);
+        const size_t count = plang_dictionary_get_count(types);
+        if (count > 0) {
+            plang_log_indent(shared_log, plang_log_level_info,
+                             "Types (%zd): {",
+                             plang_dictionary_get_count(types));
+            plang_array_t all_types
+                = plang_dictionary_copy_all_values(types);
+            for (size_t i = 0; i < count; i++) {
+                plang_type_t type = plang_array_get_item(all_types, i);
+                plang_type_describe(type);
+            }
+            plang_array_free(all_types);
+            plang_log_outdent(shared_log, plang_log_level_info, "}");
+        } else {
+            plang_log(shared_log, plang_log_level_info, "Types (0);");
         }
-        plang_array_free(all_types);
-        plang_log_outdent(shared_log, plang_log_level_info, "}");
         plang_dictionary_free(types);
     }
 
     plang_dictionary_t variables = plang_scope_copy_variables(scope);
     if (variables) {
-        plang_log_indent(shared_log, plang_log_level_info,
-                  "Variables (%zd): {",
-                  plang_dictionary_get_count(variables));
-        plang_array_t all_variables
-            = plang_dictionary_copy_all_values(variables);
-        const size_t count = plang_array_get_count(all_variables);
-        for (size_t i = 0; i < count; i++) {
-            plang_variable_t variable
-                = plang_array_get_item(all_variables, i);
-            plang_variable_describe(variable, scope);
+        const size_t count = plang_dictionary_get_count(variables);
+        if (count > 0) {
+            plang_log_indent(shared_log, plang_log_level_info,
+                             "Variables (%zd): {",
+                             plang_dictionary_get_count(variables));
+            plang_array_t all_variables
+                = plang_dictionary_copy_all_values(variables);
+            for (size_t i = 0; i < count; i++) {
+                plang_variable_t variable
+                    = plang_array_get_item(all_variables, i);
+                plang_variable_describe(variable, scope);
+            }
+            plang_array_free(all_variables);
+            plang_log_outdent(shared_log, plang_log_level_info, "}");
+        } else {
+            plang_log(shared_log, plang_log_level_info,
+                      "Variables (0);");
         }
-        plang_array_free(all_variables);
-        plang_log_outdent(shared_log, plang_log_level_info, "}");
         plang_dictionary_free(variables);
     }
 
     plang_dictionary_t procedures = plang_scope_copy_procedures(scope);
     if (procedures) {
-        plang_log_indent(shared_log, plang_log_level_info,
-                         "Procedures (%zd): {",
-                         plang_dictionary_get_count(procedures));
-        plang_array_t all_procedures
-            = plang_dictionary_copy_all_values(procedures);
-        const size_t count = plang_array_get_count(all_procedures);
-        for (size_t i = 0; i < count; i++) {
-            plang_procedure_t procedure
-                = plang_array_get_item(all_procedures, i);
-            plang_procedure_describe(procedure);
+        const size_t count = plang_dictionary_get_count(procedures);
+        if (count > 0) {
+            plang_log_indent(shared_log, plang_log_level_info,
+                             "Procedures (%zd): {",
+                             plang_dictionary_get_count(procedures));
+            plang_array_t all_procedures
+                = plang_dictionary_copy_all_values(procedures);
+            for (size_t i = 0; i < count; i++) {
+                plang_procedure_t procedure
+                    = plang_array_get_item(all_procedures, i);
+                plang_procedure_describe(procedure);
+            }
+            plang_array_free(all_procedures);
+            plang_log_outdent(shared_log, plang_log_level_info, "}");
+        } else {
+            plang_log(shared_log, plang_log_level_info,
+                      "Procedures (0);");
         }
-        plang_array_free(all_procedures);
-        plang_log_outdent(shared_log, plang_log_level_info, "}");
         plang_dictionary_free(procedures);
     }
 
     plang_dictionary_t functions = plang_scope_copy_functions(scope);
     if (functions) {
-        plang_log_indent(shared_log, plang_log_level_info,
-                         "Functions (%zd): {",
-                         plang_dictionary_get_count(functions));
-        plang_array_t all_functions
-            = plang_dictionary_copy_all_values(functions);
-        const size_t count = plang_array_get_count(all_functions);
-        for (size_t i = 0; i < count; i++) {
-            plang_function_t function
-                = plang_array_get_item(all_functions, i);
-            plang_function_describe(function, scope);
+        const size_t count = plang_dictionary_get_count(functions);
+        if (count > 0) {
+            plang_log_indent(shared_log, plang_log_level_info,
+                             "Functions (%zd): {",
+                             plang_dictionary_get_count(functions));
+            plang_array_t all_functions
+                = plang_dictionary_copy_all_values(functions);
+            for (size_t i = 0; i < count; i++) {
+                plang_function_t function
+                    = plang_array_get_item(all_functions, i);
+                plang_function_describe(function, scope);
+            }
+            plang_array_free(all_functions);
+            plang_log_outdent(shared_log, plang_log_level_info, "}");
+        } else {
+            plang_log(shared_log, plang_log_level_info,
+                      "Functions (0);");
         }
-        plang_array_free(all_functions);
-        plang_log_outdent(shared_log, plang_log_level_info, "}");
         plang_dictionary_free(functions);
     }
 }

@@ -11,6 +11,8 @@
 
 #include "plang_defines.h"
 
+#include <stdbool.h>
+
 PLANG_HEADER_BEGIN
 
 
@@ -47,6 +49,11 @@ plang_variable_get_identifier(plang_variable_t variable);
 
 plang_node_t
 plang_variable_get_node(plang_variable_t variable);
+
+
+/*! Whether a variable represents a procedure or function parameter. */
+bool
+plang_variable_is_parameter(plang_variable_t variable);
 
 
 plang_type_t

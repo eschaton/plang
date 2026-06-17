@@ -95,4 +95,12 @@ plang_function_get_result_type(plang_function_t function,
 }
 
 
+plang_scope_t
+plang_function_get_scope(plang_function_t function)
+{
+    plang_node_t node = plang_function_get_node(function);
+    return plang_node_function_get_scope(node);
+}
+
+
 PLANG_SOURCE_END

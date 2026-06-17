@@ -54,6 +54,10 @@ plang_function_get_result_type(plang_function_t function,
                                plang_scope_t scope);
 
 
+plang_scope_t
+plang_function_get_scope(plang_function_t function);
+
+
 PLANG_HEADER_END
 
 #endif /* __plang_function__h__ */

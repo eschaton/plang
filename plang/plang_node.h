@@ -228,6 +228,13 @@ plang_node_variable_reference_get_type(plang_node_t node,
                                        plang_scope_t scope);
 
 
+/*!
+ Get the _type-identifier_ node for a _parameter-declaration_ node.
+ */
+plang_node_t
+plang_node_parameter_declaration_get_type_identifier(plang_node_t node);
+
+
 /*! Get the _result-type_ node for a _function-heading_ node. */
 plang_node_t
 plang_node_function_heading_get_result_type(plang_node_t node);
