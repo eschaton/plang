@@ -405,8 +405,7 @@ plang_program_describe(plang_program_t program)
     plang_scope_t program_scope = plang_program_get_scope(program);
     plang_scope_describe(program_scope);
 
-    plang_log_outdent(shared_log, plang_log_level_info,
-                      "}", name);
+    plang_log_outdent(shared_log, plang_log_level_info, "}");
 }
 
 
@@ -478,11 +477,9 @@ main(int argc,
     plang_program_t program = plang_parser_get_program(parser);
     if (program) {
         plang_program_describe(program);
-
     }
 
     plang_log_free(shared_log);
-    shared_log = NULL;
 
     return EX_OK;
 }
