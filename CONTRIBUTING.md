@@ -19,8 +19,8 @@ jurisdiction, whichever is older.
 be made by a natural person granted the legal and other authority to do
 so by that organization.
 
-4. Submissions may not be anonymous or pseudonymous, but are done under
-the submitter's legal name.
+4. Submissions may not be anonymous, but are made under the submitter's
+legal name or other well-known identity.
 
 5. Submissions are entirely the submitter's own original work, and the
 submitter has full ownership to all intellectual property rights
