@@ -183,7 +183,7 @@ bool plang_token_identifier_comparator(void *key1,
         const char *t1 = plang_token_get_text(id1);
         const char *t2 = plang_token_get_text(id2);
 
-        if (strncmp(t1, t2, r1.length) == 0) return true;
+        if (strncasecmp(t1, t2, r1.length) == 0) return true;
 
         return false;
     } else if ((id1->_gensym != NULL) && (id2->_gensym != NULL)) {
