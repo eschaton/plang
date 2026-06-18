@@ -2281,57 +2281,69 @@ plang_node_field_list_parse(plang_parser_t parser)
 {
     struct plang_node_field_list *node = NULL;
 
-    node = PLANG_NODE_NEW(field_list);
-    assert(node != NULL);
-
-    const size_t fixed_part_start = plang_parser_get_position(parser);
     plang_node_t fixed_part = plang_node_fixed_part_parse(parser);
-    if (fixed_part == NULL) {
-        plang_error_t error
-            = plang_error_new(plang_error_type_expected_fixed_part,
-                              plang_parser_get_source(parser),
-                              plang_range(fixed_part_start, 0));
-        plang_parser_signal_error(parser, error);
-        goto bail_out;
+    /* Optional */
+
+    /*
+     If there is a fixed-part, a semicolon is required before the
+     introduction of a variant-part.
+
+     Or, put another way: If there's a fixed-part, there must be a
+     semicolon before introducing a variant-part. If there isn't a
+     fixed-part, there must not be a semicolon before introducing a
+     variant-part.
+     */
+
+    plang_token_t semicolon1 = NULL;
+    plang_node_t variant_part = NULL;
+    if (fixed_part) {
+        semicolon1 = plang_parser_next_significant_token(parser);
+        if (!plang_token_matches(semicolon1,
+                                 plang_token_type_SEMICOLON))
+        {
+            plang_parser_return_token(parser, semicolon1);
+            semicolon1 = NULL;
+        }
     }
-    node->_fixed_part = fixed_part;
 
-    // TODO: Allow variant record without fixed-part
+    if (((fixed_part != NULL) && (semicolon1 != NULL)) ||
+        ((fixed_part == NULL) && (semicolon1 == NULL)))
+    {
+        variant_part = plang_node_variant_parse(parser);
+        /* Optional */
+    }
 
-    plang_token_t semicolon1 = plang_parser_next_significant_token(parser);
-    if (plang_token_matches(semicolon1, plang_token_type_SEMICOLON)) {
-        const size_t variant_part_start = plang_parser_get_position(parser);
-        plang_node_t variant_part = plang_node_variant_parse(parser);
-        if (variant_part == NULL) {
-            plang_error_t error
-                = plang_error_new(plang_error_type_expected_variant_part,
-                                  plang_parser_get_source(parser),
-                                  plang_range(variant_part_start, 0));
-            plang_parser_signal_error(parser, error);
-            goto bail_out;
-        }
-        node->_variant_part = variant_part;
+    if (variant_part != NULL) {
+        /*
+         If there is a variant-part, there can be but doesn't have to be
+         a semicolon to terminate it, at least according to the syntax
+         diagrams in Section 3.2.2 Record-Types. This appears to be one
+         of the only cases of an optional semicolon in the grammar.
+         */
 
-        plang_token_t semicolon2 = plang_parser_next_significant_token(parser);
+        plang_token_t semicolon2
+            = plang_parser_next_significant_token(parser);
         if (!plang_token_matches(semicolon2,
-                                 plang_token_type_SEMICOLON)) {
-            plang_error_t error
-                = plang_error_new(plang_error_type_expected_SEMICOLON,
-                                  plang_parser_get_source(parser),
-                                  plang_token_get_range(semicolon2));
-            plang_parser_signal_error(parser, error);
-
-            goto bail_out;
+                                 plang_token_type_SEMICOLON))
+        {
+            plang_parser_return_token(parser, semicolon2);
         }
-    } else {
-        if (semicolon1) plang_parser_return_token(parser, semicolon1);
+    }
+
+    /*
+     Only bother creating and returning the field-list if there would be
+     something in it.
+     */
+
+    if ((fixed_part != NULL) || (variant_part != NULL)) {
+        node = PLANG_NODE_NEW(field_list);
+        assert(node != NULL);
+
+        node->_fixed_part = fixed_part;
+        node->_variant_part = variant_part;
     }
 
     return (plang_node_t) node;
-
-bail_out:
-    plang_node_free((plang_node_t) node);
-    return NULL;
 }
 
 void

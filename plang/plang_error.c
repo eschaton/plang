@@ -316,12 +316,6 @@ plang_error_message_for_type(plang_error_type_t type)
 
         case plang_error_type_expected_simple_expression:
             return "Expected simple-expression";
-
-        case plang_error_type_expected_fixed_part:
-            return "Expected fixed part";
-
-        case plang_error_type_expected_variant_part:
-            return "Expected variant part";
     }
 }
 

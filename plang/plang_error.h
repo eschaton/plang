@@ -118,8 +118,6 @@ enum plang_error_type {
     plang_error_type_expected_compound_statement,
     plang_error_type_expected_variant,
     plang_error_type_expected_simple_expression,
-    plang_error_type_expected_fixed_part,
-    plang_error_type_expected_variant_part,
 };
 typedef enum plang_error_type plang_error_type_t;
 
