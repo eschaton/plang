@@ -5322,7 +5322,7 @@ plang_node_procedure_body_parse(plang_parser_t parser,
     bool is_external = false;
 
     /*
-     Did we get an identifier matching FORWARD or EXTERNAL? Thsoe are
+     Did we get an identifier matching FORWARD or EXTERNAL? Those are
      declarations, not reserved words, so we can't rely on the reserved
      word parser.
      */
@@ -5708,7 +5708,7 @@ plang_node_function_body_parse(plang_parser_t parser,
     bool is_external = false;
 
     /*
-     Did we get an identifier matching FORWARD or EXTERNAL? Thsoe are
+     Did we get an identifier matching FORWARD or EXTERNAL? Those are
      declarations, not reserved words, so we can't rely on the reserved
      word parser.
      */

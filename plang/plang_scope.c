@@ -122,7 +122,7 @@ plang_scope_item_lookup_by_node(plang_dictionary_t dictionary,
 {
     void *item = NULL;
 
-    /* Do a linear search of the vlaues, for now. */
+    /* Do a linear search of the values, for now. */
     plang_array_t values = plang_dictionary_copy_all_values(dictionary);
     if (values == NULL) return NULL;
 

@@ -54,7 +54,7 @@ plang_type_get_node(plang_type_t type);
  Get the most concrete type for the given type.
 
  A ``plang_type_t`` may directly represent a type, or it may represent
- an alias of the type. As an exmaple, in this _type-declaration-part_,
+ an alias of the type. As an example, in this _type-declaration-part_,
 
      TYPE
          INT8 = -128..127;
