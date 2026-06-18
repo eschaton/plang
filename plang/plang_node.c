@@ -2286,7 +2286,7 @@ plang_node_field_list_parse(plang_parser_t parser)
 
     const size_t fixed_part_start = plang_parser_get_position(parser);
     plang_node_t fixed_part = plang_node_fixed_part_parse(parser);
-    if (fixed_part != NULL) {
+    if (fixed_part == NULL) {
         plang_error_t error
             = plang_error_new(plang_error_type_expected_fixed_part,
                               plang_parser_get_source(parser),
