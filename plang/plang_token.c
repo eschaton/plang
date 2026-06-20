@@ -219,6 +219,92 @@ plang_token_matches(plang_token_t PLANG_NULLABLE token,
 }
 
 
+/*! Types of built-in type. */
+typedef enum plang_token_built_in_type {
+    is_not = 0, /*!< Not a built-in type identifier. */
+    is_ordinal, /*!< A built-in ordinal type identifier. */
+    is_pointer, /*!< A built-in pointer type identifier. */
+} plang_token_built_in_type_t;
+
+
+plang_token_built_in_type_t
+plang_token_identifier_check_built_in_type(plang_token_t token)
+{
+    /* Must be an identifier to represent a built-in type. */
+    if (token->_type != plang_token_type_identifier) return is_not;
+
+    /* Must be at least as long as __BUILT_IN_INT8. */
+    const size_t text_len = token->_range.length;
+    if (text_len < 15) return is_not;
+
+    const char *text = plang_token_get_text(token);
+    if (strncasecmp(text, "__BUILT_IN_", 11) != 0) return is_not;
+
+    /* At this point it's worth compring the suffix. */
+
+    struct built_in_type_name {
+        const char * const _name;
+        const size_t _name_len;
+        const plang_token_built_in_type_t _built_in_type;
+    } built_in_type_names[] = {
+        /* Keep sorted by _name_len, see below. */
+        { "CHAR", 4, is_ordinal },
+        { "INT8", 4, is_ordinal },
+        { "INT16", 5, is_ordinal },
+        { "INT32", 5, is_ordinal },
+        { "INT64", 5, is_ordinal },
+        { "INTPTR", 6, is_ordinal },
+        { "ANYPTR", 6, is_pointer },
+        { "BOOLEAN", 7, is_ordinal },
+        { NULL, 0, is_not },
+    };
+
+    for (struct built_in_type_name *bitn = &built_in_type_names[0];
+         bitn->_name != NULL;
+         bitn = bitn + 1)
+    {
+        /* Only do string comparison if it can succeed. */
+
+        if (((text_len - 11) == bitn->_name_len) &&
+            (strncasecmp(bitn->_name, &text[11], bitn->_name_len) == 0))
+        {
+            return bitn->_built_in_type;
+        } else if ((text_len - 11) < bitn->_name_len) {
+            /*
+             Since built_in_type_names[] is sorted by _name_len, if the
+             current built-in type name would be larger than what we're
+             looking at, nothing will be found so exit with a failure
+             now rather than continue to loop to the end.
+             */
+            break;
+        }
+    }
+
+    return is_not;
+}
+
+
+bool
+plang_token_identifier_is_built_in_type(plang_token_t token)
+{
+    return plang_token_identifier_check_built_in_type(token) != is_not;
+}
+
+
+bool
+plang_token_identifier_is_built_in_ordinal_type(plang_token_t token)
+{
+    return plang_token_identifier_check_built_in_type(token) == is_ordinal;
+}
+
+
+bool
+plang_token_identifier_is_built_in_pointer_type(plang_token_t token)
+{
+    return plang_token_identifier_check_built_in_type(token) == is_pointer;
+}
+
+
 bool
 plang_token_is_factor_operator(plang_token_t PLANG_NULLABLE token)
 {

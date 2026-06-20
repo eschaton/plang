@@ -260,6 +260,51 @@ plang_token_matches(plang_token_t PLANG_NULLABLE token,
 
 
 /*!
+ Does the token represent a built-in type?
+
+ A built-in type token is an identifier token that has the prefix
+ `__BUILT_IN_` and one of the following suffixes:
+
+ - `INT8`, an 8-bit integer
+ - `INT16`, a 16-bit integer
+ - `INT32`, a 32-bit integer
+ - `INT64`, a 64-bit integer
+ - `INTPTR`, an integer of correct size to hold a pointer
+ - `BOOLEAN`, a logical `FALSE` or `TRUE`
+ - `CHAR`, a character in a string
+ - `ANYPTR`, the polymorphic type
+
+ These are used to define the actual built-in types in the preamble, and
+ are the lowest level of the type system upon which the rest is built.
+ */
+bool
+plang_token_identifier_is_built_in_type(plang_token_t token);
+
+
+/*!
+ Is the token a built-in ordinal type?
+
+ Tells whether the built-in type is one of the built-in ordinal types.
+ (Currently all built-in types except `__BUILT_IN_ANYPTR`, which is
+ the polymorphic type taken by the built-in memory allocator.)
+ */
+bool
+plang_token_identifier_is_built_in_ordinal_type(plang_token_t token);
+
+
+/*!
+ Is the token a built-in pointer type?
+
+ Tells whether the built-in type is one of the built-in pointer types.
+ (Currently only `__BUILT_IN_ANYPTR`, which is the polymorphic type
+ taken by the built-in memory allocator.)
+ */
+bool
+plang_token_identifier_is_built_in_pointer_type(plang_token_t token);
+
+
+
+/*!
  Is the token a _term_ operator?
 
  Indicates whether the token represents one of the operators in the

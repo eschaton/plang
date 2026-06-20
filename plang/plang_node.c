@@ -1482,14 +1482,35 @@ plang_node_type_identifier_parse(plang_parser_t parser)
     plang_scope_t scope = plang_parser_scope_current(parser);
     plang_type_t type = plang_scope_type_lookup(scope, identifier, true);
     if (type == NULL) {
-        plang_parser_return_token(parser, identifier);
-        goto bail_out;
+        /*
+         There are special type identifiers that start with the prefix
+         __BUILT_IN_ that resolve to themselves. These are handled by
+         the type system directly, to implement the built-in types;
+         these types are then declared in the preamble.
+         */
+        if (!plang_token_identifier_is_built_in_type(identifier)) {
+            plang_parser_return_token(parser, identifier);
+            goto bail_out;
+        }
     }
 
     node = PLANG_NODE_NEW(type_identifier);
     assert(node != NULL);
 
     node->_identifier = identifier;
+
+    /*
+     If this was the first time "__BUILT_IN_" was encountered within
+     this scope, register it as a type with the scope using this node,
+     in order to ensure future lookups in the same scope will succeed.
+     */
+    if (type == NULL) {
+        plang_type_t builtin_type
+            = plang_type_new(parser, identifier, (plang_node_t) node);
+        bool registered = plang_scope_type_register(scope,
+                                                    builtin_type);
+        assert(registered != false);
+    }
 
     return (plang_node_t) node;
 
@@ -1535,20 +1556,18 @@ plang_node_simple_type_identifier_parse(plang_parser_t parser)
 plang_node_t PLANG_NULLABLE
 plang_node_structured_type_identifier_parse(plang_parser_t parser)
 {
-    struct plang_node_type_identifier *node = NULL;
-
-    plang_token_t identifier = plang_parser_next_significant_token(parser);
-    if (!plang_token_matches(identifier, plang_token_type_identifier)) {
+    plang_node_t node = plang_node_type_identifier_parse(parser);
+    if (node == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
-        if (identifier) plang_parser_return_token(parser, identifier);
         goto bail_out;
     }
 
     /*
-     Check whether the identifier references a known structured (array,
-     set, or record) type.
+     Check whether the identifier references a known structured type.
      */
 
+    plang_token_t identifier
+        = plang_node_type_identifier_get_identifier(node);
     plang_scope_t scope = plang_parser_scope_current(parser);
     plang_type_t type
         = plang_scope_type_lookup(scope, identifier, true);
@@ -1558,37 +1577,31 @@ plang_node_structured_type_identifier_parse(plang_parser_t parser)
     }
 
     /*
-     The identifier refers to a structured type, so create a node for it
-     and save a reference to the declaration node from the type into it.
+     The identifier refers to a structured type, so return it.
      */
 
-    node = PLANG_NODE_NEW(type_identifier);
-    assert(node != NULL);
-
-    node->_identifier = identifier;
-    node->_declaration = plang_type_get_node(type);
-
-    return (plang_node_t) node;
+    return node;
 
 bail_out:
-    plang_node_free((plang_node_t) node);
+    plang_node_free(node);
     return NULL;
 }
 
 plang_node_t PLANG_NULLABLE
 plang_node_pointer_type_identifier_parse(plang_parser_t parser)
 {
-    struct plang_node_type_identifier *node = NULL;
-
-    plang_token_t identifier = plang_parser_next_significant_token(parser);
-    if (!plang_token_matches(identifier, plang_token_type_identifier)) {
+    plang_node_t node = plang_node_type_identifier_parse(parser);
+    if (node == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
-        if (identifier) plang_parser_return_token(parser, identifier);
         goto bail_out;
     }
 
-    /* Check whether the identifier references a known pointer type. */
+    /*
+     Check whether the identifier references a known pointer type.
+     */
 
+    plang_token_t identifier
+        = plang_node_type_identifier_get_identifier(node);
     plang_scope_t scope = plang_parser_scope_current(parser);
     plang_type_t type
         = plang_scope_type_lookup(scope, identifier, true);
@@ -1598,32 +1611,22 @@ plang_node_pointer_type_identifier_parse(plang_parser_t parser)
     }
 
     /*
-     The identifier refers to a pointer type, so create a node for it
-     and save a reference to the declaration node from the type into it.
+     The identifier refers to a pointer type, so return it.
      */
 
-    node = PLANG_NODE_NEW(type_identifier);
-    assert(node != NULL);
-
-    node->_identifier = identifier;
-    node->_declaration = plang_type_get_node(type);
-
-    return (plang_node_t) node;
+    return node;
 
 bail_out:
-    plang_node_free((plang_node_t) node);
+    plang_node_free(node);
     return NULL;
 }
 
 plang_node_t PLANG_NULLABLE
 plang_node_ordinal_type_identifier_parse(plang_parser_t parser)
 {
-    struct plang_node_type_identifier *node = NULL;
-
-    plang_token_t identifier = plang_parser_next_significant_token(parser);
-    if (!plang_token_matches(identifier, plang_token_type_identifier)) {
+    plang_node_t node = plang_node_type_identifier_parse(parser);
+    if (node == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
-        if (identifier) plang_parser_return_token(parser, identifier);
         goto bail_out;
     }
 
@@ -1632,6 +1635,8 @@ plang_node_ordinal_type_identifier_parse(plang_parser_t parser)
      or enumerated) type.
      */
 
+    plang_token_t identifier
+        = plang_node_type_identifier_get_identifier(node);
     plang_scope_t scope = plang_parser_scope_current(parser);
     plang_type_t type
         = plang_scope_type_lookup(scope, identifier, true);
@@ -1641,37 +1646,31 @@ plang_node_ordinal_type_identifier_parse(plang_parser_t parser)
     }
 
     /*
-     The identifier refers to an ordinal type, so create a node for it
-     and save a reference to the declaration node from the type into it.
+     The identifier refers to an ordinal type, so return it.
      */
 
-    node = PLANG_NODE_NEW(type_identifier);
-    assert(node != NULL);
-
-    node->_identifier = identifier;
-    node->_declaration = plang_type_get_node(type);
-
-    return (plang_node_t) node;
+    return node;
 
 bail_out:
-    plang_node_free((plang_node_t) node);
+    plang_node_free(node);
     return NULL;
 }
 
 plang_node_t PLANG_NULLABLE
 plang_node_real_type_identifier_parse(plang_parser_t parser)
 {
-    struct plang_node_type_identifier *node = NULL;
-
-    plang_token_t identifier = plang_parser_next_significant_token(parser);
-    if (!plang_token_matches(identifier, plang_token_type_identifier)) {
+    plang_node_t node = plang_node_type_identifier_parse(parser);
+    if (node == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
-        if (identifier) plang_parser_return_token(parser, identifier);
         goto bail_out;
     }
 
-    /* Check whether the identifier references a known real type. */
+    /*
+     Check whether the identifier references a known real type.
+     */
 
+    plang_token_t identifier
+        = plang_node_type_identifier_get_identifier(node);
     plang_scope_t scope = plang_parser_scope_current(parser);
     plang_type_t type
         = plang_scope_type_lookup(scope, identifier, true);
@@ -1681,38 +1680,31 @@ plang_node_real_type_identifier_parse(plang_parser_t parser)
     }
 
     /*
-     The identifier refers to a real type, so create a node for it and
-     save a reference to the declaration node from the type into it.
+     The identifier refers to a real type, so return it.
      */
 
-    node = PLANG_NODE_NEW(type_identifier);
-    assert(node != NULL);
-
-    node->_identifier = identifier;
-    node->_declaration = plang_type_get_node(type);
-
-    return (plang_node_t) node;
+    return node;
 
 bail_out:
-    plang_node_free((plang_node_t) node);
+    plang_node_free(node);
     return NULL;
 }
 
 plang_node_t PLANG_NULLABLE
 plang_node_string_type_identifier_parse(plang_parser_t parser)
 {
-    struct plang_node_type_identifier *node = NULL;
-
-    plang_token_t identifier
-        = plang_parser_next_significant_token(parser);
-    if (!plang_token_matches(identifier, plang_token_type_identifier)) {
+    plang_node_t node = plang_node_type_identifier_parse(parser);
+    if (node == NULL) {
         /* Not what we're looking for, bail out to backtrack. */
-        if (identifier) plang_parser_return_token(parser, identifier);
         goto bail_out;
     }
 
-    /* Check whether the identifier references a known string type. */
+    /*
+     Check whether the identifier references a known string type.
+     */
 
+    plang_token_t identifier
+        = plang_node_type_identifier_get_identifier(node);
     plang_scope_t scope = plang_parser_scope_current(parser);
     plang_type_t type
         = plang_scope_type_lookup(scope, identifier, true);
@@ -1722,20 +1714,13 @@ plang_node_string_type_identifier_parse(plang_parser_t parser)
     }
 
     /*
-     The identifier refers to a string type, so create a node for it and
-     save a reference to the declaration node from the type into it.
+     The identifier refers to a string type, so return it.
      */
 
-    node = PLANG_NODE_NEW(type_identifier);
-    assert(node != NULL);
-
-    node->_identifier = identifier;
-    node->_declaration = plang_type_get_node(type);
-
-    return (plang_node_t) node;
+    return node;
 
 bail_out:
-    plang_node_free((plang_node_t) node);
+    plang_node_free(node);
     return NULL;
 }
 

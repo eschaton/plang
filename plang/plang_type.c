@@ -13,6 +13,7 @@
 
 #include "plang_node.h"
 #include "plang_scope.h"
+#include "plang_token.h"
 
 PLANG_SOURCE_BEGIN
 
@@ -72,6 +73,24 @@ plang_type_get_concrete_type_node(plang_type_t PLANG_NULLABLE type,
     plang_node_t ctnode = NULL;
 
     plang_node_t tdnode = type->_node;
+
+    /*
+     If the type's node is a type identifier, then the type itself
+     is a built-in type and already concrete. Otherwise it needs to
+     be looked up further until it reaches a concrete type.
+     */
+
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_identifier) {
+        return tdnode;
+    }
+
+    /*
+     The type's node must be a type declaration. Look up the type on the
+     right-hand side of the type declaration until a concrete type is
+     discovered rather than a type identifier.
+     */
+
     do {
         plang_node_t tdtype
             = plang_node_type_declaration_get_type(tdnode);
@@ -85,6 +104,15 @@ plang_type_get_concrete_type_node(plang_type_t PLANG_NULLABLE type,
                                           tdtype_identifier,
                                           true);
             tdnode = tdtype_underlying->_node;
+
+            /*
+             If the type declaration's type is self-referential, that
+             that means it's a built-in type.
+             */
+
+            if (tdnode == tdtype) {
+                ctnode = tdnode;
+            }
         } else {
             ctnode = tdtype;
         }
@@ -100,6 +128,22 @@ plang_type_is_ordinal(plang_type_t PLANG_NULLABLE type,
 {
     if (type == NULL) return false;
 
+    /*
+     If the type's node is a type identifier, that means it's a built-in
+     type. Whether it's an ordinal depends on which built-in type it is.
+     */
+
+    plang_node_t tdnode = type->_node;
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_identifier) {
+        return plang_token_identifier_is_built_in_ordinal_type(type->_identifier);
+    }
+
+    /*
+     Otherwise, recursively determine the concrete type to which this
+     type corresponds, and return whether that's an ordinal type.
+     */
+
     plang_node_t ctnode = plang_type_get_concrete_type_node(type,
                                                             scope);
     plang_node_type_t ctnode_type
@@ -111,9 +155,16 @@ plang_type_is_ordinal(plang_type_t PLANG_NULLABLE type,
      represents an ordinal type or whether it was a red herring.
      */
 
-    return ((ctnode != NULL) &&
-            ((ctnode_type == plang_node_type_subrange_type) ||
-             (ctnode_type == plang_node_type_enumerated_type)));
+    if (ctnode == NULL) return false;
+
+    if (ctnode_type == plang_node_type_type_identifier) {
+        plang_token_t ctnode_identifier
+            = plang_node_type_identifier_get_identifier(ctnode);
+        return plang_token_identifier_is_built_in_ordinal_type(ctnode_identifier);
+    }
+
+    return ((ctnode_type == plang_node_type_subrange_type) ||
+            (ctnode_type == plang_node_type_enumerated_type));
 }
 
 
@@ -134,6 +185,23 @@ plang_type_is_string(plang_type_t PLANG_NULLABLE type,
                      plang_scope_t scope)
 {
     if (type == NULL) return false;
+
+    /*
+     If the type's node is a type identifier, that means it's a built-in
+     type. Since there's no such thing as a built-in string type, this
+     can't be one.
+     */
+
+    plang_node_t tdnode = type->_node;
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_identifier) {
+        return false;
+    }
+
+    /*
+     Otherwise, recursively determine the concrete type to which this
+     type corresponds, and return whether that's a string type.
+     */
 
     plang_node_t ctnode = plang_type_get_concrete_type_node(type,
                                                             scope);
@@ -156,6 +224,23 @@ plang_type_is_structured(plang_type_t PLANG_NULLABLE type,
                          plang_scope_t scope)
 {
     if (type == NULL) return false;
+
+    /*
+     If the type's node is a type identifier, that means it's a built-in
+     type. Since there's no such thing as a built-in structured type,
+     this can't be one.
+     */
+
+    plang_node_t tdnode = type->_node;
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_identifier) {
+        return false;
+    }
+
+    /*
+     Otherwise, recursively determine the concrete type to which this
+     type corresponds, and return whether that's a structured type.
+     */
 
     plang_node_t ctnode = plang_type_get_concrete_type_node(type,
                                                             scope);
@@ -181,6 +266,23 @@ plang_type_is_record(plang_type_t PLANG_NULLABLE type,
 {
     if (type == NULL) return false;
 
+    /*
+     If the type's node is a type identifier, that means it's a built-in
+     type. Since there's no such thing as a built-in record type, this
+     can't be one.
+     */
+
+    plang_node_t tdnode = type->_node;
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_identifier) {
+        return false;
+    }
+
+    /*
+     Otherwise, recursively determine the concrete type to which this
+     type corresponds, and return whether that's a record type.
+     */
+
     plang_node_t ctnode = plang_type_get_concrete_type_node(type,
                                                             scope);
     plang_node_type_t ctnode_type
@@ -203,6 +305,22 @@ plang_type_is_pointer(plang_type_t PLANG_NULLABLE type,
 {
     if (type == NULL) return false;
 
+    /*
+     If the type's node is a type identifier, that means it's a built-in
+     type. Whether it's a pointer depends on which built-in type it is.
+     */
+
+    plang_node_t tdnode = type->_node;
+    plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
+    if (tdnode_type == plang_node_type_type_identifier) {
+        return plang_token_identifier_is_built_in_pointer_type(type->_identifier);
+    }
+
+    /*
+     Otherwise, recursively determine the concrete type to which this
+     type corresponds, and return whether that's a pointer type.
+     */
+
     plang_node_t ctnode = plang_type_get_concrete_type_node(type,
                                                             scope);
     plang_node_type_t ctnode_type
@@ -214,8 +332,15 @@ plang_type_is_pointer(plang_type_t PLANG_NULLABLE type,
      represents a pointer type or whether it was a red herring.
      */
 
-    return ((ctnode != NULL) &&
-            (ctnode_type == plang_node_type_pointer_type));
+    if (ctnode == NULL) return false;
+
+    if (ctnode_type == plang_node_type_type_identifier) {
+        plang_token_t ctnode_identifier
+            = plang_node_type_identifier_get_identifier(ctnode);
+        return plang_token_identifier_is_built_in_pointer_type(ctnode_identifier);
+    }
+
+    return (ctnode_type == plang_node_type_pointer_type);
 }
 
 
