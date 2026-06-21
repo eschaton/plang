@@ -66,22 +66,42 @@ plang_type_get_node(plang_type_t type)
 }
 
 
-plang_node_t PLANG_NULLABLE
-plang_type_get_concrete_type_node(plang_type_t PLANG_NULLABLE type,
-                                  plang_scope_t scope)
+plang_type_kind_t
+plang_type_get_kind(plang_type_t type)
 {
+    return type->_kind;
+}
+
+
+bool
+plang_type_is_concrete(plang_type_t type)
+{
+    /* A type is concrete if its node is its most concrete node. */
+
+    return type->_node == type->_concrete_node;
+}
+
+
+bool
+plang_type_resolve(plang_type_t type,
+                   plang_scope_t scope)
+{
+    /* If the type has already been resolved, say so immediately. */
+
+    if (type->_concrete_node != NULL) return true;
+
     plang_node_t ctnode = NULL;
 
     plang_node_t tdnode = type->_node;
 
     /*
-     If the type's node is a type identifier, then the type itself
-     is a built-in type and already concrete. Otherwise it needs to
-     be looked up further until it reaches a concrete type.
+     If the type's node is not a type declaration, then the type is
+     either a built-in type or an anonymous type, and thus already
+     concrete.
      */
 
     plang_node_type_t tdnode_type = plang_node_get_type(tdnode);
-    if (tdnode_type == plang_node_type_type_identifier) {
+    if (tdnode_type != plang_node_type_type_declaration) {
         return tdnode;
     }
 
@@ -107,7 +127,7 @@ plang_type_get_concrete_type_node(plang_type_t PLANG_NULLABLE type,
 
             /*
              If the type declaration's type is self-referential, that
-             that means it's a built-in type.
+             means it's a built-in or anonymous type.
              */
 
             if (tdnode == tdtype) {
@@ -118,7 +138,34 @@ plang_type_get_concrete_type_node(plang_type_t PLANG_NULLABLE type,
         }
     } while ((tdnode != NULL) && (ctnode == NULL));
 
-    return ctnode;
+    type->_concrete_node = ctnode;
+
+    if (plang_type_is_ordinal(type, scope)) {
+        type->_kind = plang_type_kind_ordinal;
+    } else if (plang_type_is_real(type, scope)) {
+        type->_kind = plang_type_kind_real;
+    } else if (plang_type_is_string(type, scope)) {
+        type->_kind = plang_type_kind_string;
+    } else if (plang_type_is_structured(type, scope)) {
+        type->_kind = plang_type_kind_structured;
+    } else if (plang_type_is_pointer(type, scope)) {
+        type->_kind = plang_type_kind_pointer;
+    } else {
+        /* Should never happen. */
+        assert(false);
+    }
+
+    return (ctnode != NULL);
+}
+
+
+plang_node_t PLANG_NULLABLE
+plang_type_get_concrete_type_node(plang_type_t PLANG_NULLABLE type,
+                                  plang_scope_t scope)
+{
+    if (type == NULL) return NULL;
+
+    return type->_concrete_node;
 }
 
 
@@ -127,6 +174,8 @@ plang_type_is_ordinal(plang_type_t PLANG_NULLABLE type,
                       plang_scope_t scope)
 {
     if (type == NULL) return false;
+
+    if (type->_kind == plang_type_kind_ordinal) return true;
 
     /*
      If the type's node is a type identifier, that means it's a built-in
@@ -174,6 +223,8 @@ plang_type_is_real(plang_type_t PLANG_NULLABLE type,
 {
     if (type == NULL) return false;
 
+    if (type->_kind == plang_type_kind_real) return true;
+
     // TODO: Support "real" (floating-point) types
 
     return false;
@@ -185,6 +236,8 @@ plang_type_is_string(plang_type_t PLANG_NULLABLE type,
                      plang_scope_t scope)
 {
     if (type == NULL) return false;
+
+    if (type->_kind == plang_type_kind_string) return true;
 
     /*
      If the type's node is a type identifier, that means it's a built-in
@@ -224,6 +277,8 @@ plang_type_is_structured(plang_type_t PLANG_NULLABLE type,
                          plang_scope_t scope)
 {
     if (type == NULL) return false;
+
+    if (type->_kind == plang_type_kind_structured) return true;
 
     /*
      If the type's node is a type identifier, that means it's a built-in
@@ -266,6 +321,14 @@ plang_type_is_record(plang_type_t PLANG_NULLABLE type,
 {
     if (type == NULL) return false;
 
+    /* A type known not to be a structured type cannot be a record. */
+
+    if ((type->_kind != plang_type_kind_unknonwn) &&
+        (type->_kind != plang_type_kind_structured))
+    {
+        return false;
+    }
+
     /*
      If the type's node is a type identifier, that means it's a built-in
      type. Since there's no such thing as a built-in record type, this
@@ -304,6 +367,8 @@ plang_type_is_pointer(plang_type_t PLANG_NULLABLE type,
                       plang_scope_t scope)
 {
     if (type == NULL) return false;
+
+    if (type->_kind == plang_type_kind_pointer) return true;
 
     /*
      If the type's node is a type identifier, that means it's a built-in

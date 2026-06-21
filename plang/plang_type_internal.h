@@ -18,6 +18,8 @@ struct plang_type {
     plang_parser_t _parser;
     plang_token_t _identifier;
     plang_node_t _node;
+    plang_type_kind_t _kind;
+    plang_node_t PLANG_NULLABLE _concrete_node;
 };
 
 

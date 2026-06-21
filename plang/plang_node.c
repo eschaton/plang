@@ -1270,6 +1270,11 @@ plang_node_type_declaration_parse(plang_parser_t parser)
 
     plang_node_type_set_type_declaration(type_node, (plang_node_t) node);
 
+    /* Resolve the type. */
+
+    bool resolved = plang_type_resolve(type, scope);
+    assert(resolved != false);
+
     return (plang_node_t) node;
 
 bail_out:
@@ -1510,6 +1515,11 @@ plang_node_type_identifier_parse(plang_parser_t parser)
         bool registered = plang_scope_type_register(scope,
                                                     builtin_type);
         assert(registered != false);
+
+        /* Also resolve the type immediately. */
+
+        bool resolved = plang_type_resolve(builtin_type, scope);
+        assert(resolved != false);
     }
 
     return (plang_node_t) node;
@@ -2801,6 +2811,11 @@ plang_node_variable_declaration_parse(plang_parser_t parser)
         bool registered
             = plang_scope_type_register(scope, variable_type);
         assert(registered != false);
+
+        /* Also resolve the type immediately. */
+
+        bool resolved = plang_type_resolve(variable_type, scope);
+        assert(resolved != false);
     }
 
     /*

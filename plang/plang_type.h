@@ -51,6 +51,58 @@ plang_type_get_node(plang_type_t type);
 
 
 /*!
+ The kinds of type supported by `plang`.
+
+ There are several different kinds of types supported by `plang`:
+ Ordinal types, real types, string types, structured types, and
+ pointer types.
+
+ - NOTE: This is slightly different than the predicate functions below,
+         since records are one kind of structured type.
+ */
+typedef enum {
+    plang_type_kind_unknonwn = 0,
+    plang_type_kind_ordinal,
+    plang_type_kind_real,
+    plang_type_kind_string,
+    plang_type_kind_structured,
+    plang_type_kind_pointer,
+} plang_type_kind_t;
+
+
+/*! Get the kind of type that a type represents. */
+plang_type_kind_t
+plang_type_get_kind(plang_type_t type);
+
+
+/*!
+ Indicates whether a type is concrete.
+
+ A _concrete type_ is a type where right-hand side of its declaration is
+ a type or one of the built-in type identifiers. An _alias type_ is one
+ where the right-hand side of its declaration is a type identifier that
+ must be resolved for details about the type.
+ */
+bool
+plang_type_is_concrete(plang_type_t type);
+
+
+/*!
+ Resolve the type's most concrete node and kind.
+
+ Before a type is resolved, whether it's a concrete type or alias type
+ isn't known. This resolution must be performed after the type is fully
+ created but before it is used.
+
+ - Returns: `true` if resolution succeeds, `false` if it fails for some
+            reason
+ */
+bool
+plang_type_resolve(plang_type_t type,
+                   plang_scope_t scope);
+
+
+/*!
  Get the most concrete type for the given type.
 
  A ``plang_type_t`` may directly represent a type, or it may represent
