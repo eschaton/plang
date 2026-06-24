@@ -8,77 +8,85 @@
 
 #import "plangTestCase.h"
 
+#include "tests_main.h"
+
+#include <check.h>
+
 
 NS_ASSUME_NONNULL_BEGIN
 
 
 @implementation plangTestCase
+
+- (void)testRunCheckTests
 {
-    plang_log_t _log;
-    NSMutableArray *_messages;
+    // TODO: Generate real suite & test cases etc. for check tests
+    // This requires API not available as of Check 0.15.2
+
+    // Change the working directory to someplace the tests will be able
+    // to find their test data.
+
+    NSBundle *bundle = [NSBundle bundleForClass:self.class];
+    NSFileManager *dfm = NSFileManager.defaultManager;
+    BOOL changed = [dfm changeCurrentDirectoryPath:bundle.resourcePath];
+    XCTAssertTrue(changed);
+
+    // Get the tests themselves
+
+    Suite *s;
+    SRunner *sr;
+    tests_suite_and_runner(&s, &sr);
+
+    // Turn off use of fork for the test suite run.
+
+    srunner_set_fork_status(sr, CK_NOFORK);
+
+    // Run all the tests in the test suite, with verbose output.
+
+    srunner_run_all(sr, CK_VERBOSE);
+
+    // Register any failures with Xcode, to get source annotations.
+
+    int nfailed = srunner_ntests_failed(sr);
+
+    TestResult **results = srunner_failures(sr);
+    for (int i = 0; i < nfailed; i++) {
+        TestResult *result = results[i];
+        XCTIssue *issue = [self issueForCheckTestResult:result];
+        [self recordIssue:issue];
+    }
+
+    // Clean up
+
+    free(results);
+    srunner_free(sr);
 }
 
-- (void)logMessage:(NSString *)message
-           atLevel:(plang_log_level_t)level
-  indentationLevel:(int)indent
+- (XCTIssue *)issueForCheckTestResult:(TestResult *)result
 {
-    NSDictionary *typeMap = @{
-        @(plang_log_level_debug):   @"debug",
-        @(plang_log_level_info):    @"info",
-        @(plang_log_level_notice):  @"notice",
-        @(plang_log_level_warning): @"warning",
-        @(plang_log_level_error):   @"error",
-    };
+    enum test_result rtype = tr_rtype(result);
+    int lno = tr_lno(result);
+    const char *lfile = tr_lfile(result);
+    const char *msg = tr_msg(result);
 
-    NSString *fullMessage = [NSString stringWithFormat:@"%@: %@",
-                             typeMap[@(level)], message];
-    [_messages addObject:fullMessage];
-}
+    XCTIssueType issueType = ((rtype == CK_FAILURE)
+                              ? XCTIssueTypeAssertionFailure
+                              : XCTIssueTypeUncaughtException);
 
-void plangTestCasLogOutput(const plang_log_level_t level,
-                           const char *message,
-                           int indent,
-                           void * PLANG_NONNULL context)
-{
-    plangTestCase *testCase = (__bridge plangTestCase *) context;
+    XCTSourceCodeLocation *sourceCodeLocation
+        = [[XCTSourceCodeLocation alloc] initWithFilePath:@(lfile)
+                                               lineNumber:lno];
 
-    [testCase logMessage:[NSString stringWithUTF8String:message]
-                 atLevel:level
-        indentationLevel:indent];
-}
+    XCTSourceCodeContext *sourceCodeContext
+        = [[XCTSourceCodeContext alloc] initWithLocation:sourceCodeLocation];
 
-- (void)setUp
-{
-    [super setUp];
-
-    _log = plang_log_new(plangTestCasLogOutput, (__bridge void *) self);
-    XCTAssertNotEqual(_log, NULL);
-
-    /* Log everything */
-    plang_log_set_default_level(_log, plang_log_level_debug);
-
-    _messages = [NSMutableArray array];
-}
-
-- (void)tearDown
-{
-    plang_log_free(_log);
-
-    [super tearDown];
-}
-
-- (plang_log_t)plang_log
-{
-    return _log;
-}
-
-- (nullable NSData *)testFileWithName:(NSString *)name
-                                error:(NSError **)error
-{
-    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-    NSString *testFilePath = [bundle pathForResource:name ofType:@"pas"];
-    XCTAssertNotNil(testFilePath);
-    return [NSData dataWithContentsOfFile:testFilePath options:0 error:error];
+    return [[XCTIssue alloc] initWithType:issueType
+                       compactDescription:@(msg)
+                      detailedDescription:NULL
+                        sourceCodeContext:sourceCodeContext
+                          associatedError:NULL
+                              attachments:@[]
+                                 severity:XCTIssueSeverityError];
 }
 
 @end

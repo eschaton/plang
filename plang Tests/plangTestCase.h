@@ -15,19 +15,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 @interface plangTestCase : XCTestCase
-
-/*! Gets the log used for this test case. */
-@property (nonatomic, readonly, assign) plang_log_t plang_log;
-
-/*!
- Gets a test file.
-
- Returns the contents of the test file with the given name in the test
- bundle's resources.
- */
-- (nullable NSData *)testFileWithName:(NSString *)name
-                                error:(NSError **)error;
-
 @end
 
 
