@@ -10,8 +10,14 @@
 #define __plang_defines__h__
 
 
+#ifdef __clang__
 #define PLANG_NULLABLE		_Nullable
 #define PLANG_NONNULL		_Nonnull
+#else
+#define PLANG_NULLABLE
+#define PLANG_NONNULL
+#define SIZE_T_MAX ((size_t)-1)
+#endif
 
 #define PLANG_NONNULL_BEGIN _Pragma("clang assume_nonnull begin")
 #define PLANG_NONNULL_END   _Pragma("clang assume_nonnull end")
